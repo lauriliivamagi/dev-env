@@ -120,9 +120,9 @@ docker run -it --rm -v $(pwd):/app -w /app ubuntu:25.10 bash
 ### 1. Write the Task
 
 ```typescript
-// src/tasks/mytool.ts
-import { type TaskContext, verify as v } from "../lib/mod.ts";
-import { apt } from "../lib/shell.ts";
+// stacks/<stack>/tasks/mytool.ts
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
+import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["mytool"]);
@@ -160,37 +160,25 @@ docker run -it --rm \
 deno task run mytool
 ```
 
-## Writing Integration Tests
+## Unit Tests
 
-### Test File Structure
-
-```typescript
-// src/tasks/mytool.test.ts
-import { assertEquals } from "@std/assert";
-import { getTestContext } from "../lib/test-utils.ts";
-import { run, verify } from "./mytool.ts";
-
-Deno.test("mytool installs correctly", async () => {
-  const ctx = getTestContext();
-  await run(ctx);
-  await verify(ctx);
-});
-```
-
-### Run Tests
+Unit tests cover the core library utilities in `src/lib/`:
 
 ```bash
-deno test
+# Run all unit tests
+deno task test
+
+# Run tests matching a pattern
+deno task test:task "copyFile"
+deno task test:task "dry-run"
 ```
 
-### Test with Docker
+### What's Tested
 
-Tests run in Docker for isolation:
-
-```bash
-docker build -f Dockerfile.test -t test .
-docker run --rm test deno test
-```
+- `src/lib/deps.test.ts` - Dependency resolution and topological sort
+- `src/lib/fs.test.ts` - File operations and safety validation
+- `src/lib/shell.test.ts` - Command execution and dry-run behavior
+- `src/lib/verify.test.ts` - Post-task verification utilities
 
 ## Debugging Failed Tasks
 
@@ -211,7 +199,7 @@ console.log("code:", result.code);
 ### Add Logging
 
 ```typescript
-import * as log from "../lib/log.ts";
+import * as log from "../../../src/lib/log.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Starting mytool installation");
@@ -261,20 +249,20 @@ The `verify()` function runs after install. If it fails:
 # Preview task
 deno task run mytask --dry
 
-# Test all tasks in Docker
-make test-all
-
 # Test specific task in Docker
 make test TASK=mytask
+
+# Dry-run all tasks in Docker
+make test-dry
 
 # Interactive container for debugging
 make shell
 
-# Run tests
-deno test
+# Run unit tests
+deno task test
 
-# Run specific test
-deno test src/tasks/mytool.test.ts
+# Run tests matching pattern
+deno task test:task "copyFile"
 
 # Type check
 deno task check

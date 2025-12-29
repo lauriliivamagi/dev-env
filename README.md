@@ -45,8 +45,8 @@ deno task run rust node neovim
 # Sync dotfiles and configs
 deno task sync
 
-# Test all tasks in Docker (for development)
-make test-all
+# Test a task in Docker (for development)
+make test TASK=zsh
 ```
 
 ## Available Tasks

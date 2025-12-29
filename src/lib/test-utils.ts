@@ -2,6 +2,8 @@
  * Test utilities for running tasks in Docker containers.
  */
 
+import type { TaskContext } from "./config.ts";
+
 const IMAGE = "dev-env-test";
 const DOCKERFILE = "Dockerfile.test";
 
@@ -118,4 +120,22 @@ export async function cleanupDocker(): Promise<void> {
   });
   await cmd.output();
   imageBuilt = false;
+}
+
+/**
+ * Create a mock TaskContext for unit tests.
+ * Defaults to dry-run mode for safety.
+ */
+export function createMockContext(
+  overrides?: Partial<TaskContext>,
+): TaskContext {
+  return {
+    dryRun: true,
+    home: "/tmp/test-home",
+    devEnv: "/tmp/test-dev-env",
+    configHome: "/tmp/test-home/.config",
+    stack: "test",
+    stackRoot: "/tmp/test-dev-env/stacks/test",
+    ...overrides,
+  };
 }

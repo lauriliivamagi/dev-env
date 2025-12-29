@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 deno task check                    # Type check all TypeScript files
 deno task lint                     # Lint source code
-deno task test                     # Run all tests
-deno task test:task                # Run specific task tests (e.g., deno task test:task rust)
+deno task test                     # Run all unit tests
+deno task test:task "pattern"      # Run tests matching pattern (e.g., deno task test:task copyFile)
 deno task run -s <stack> [filter]  # Run setup tasks for a stack
 deno task sync -s <stack>          # Sync configs from stack's env/ to home directory
 deno task compile                  # Compile to standalone binary
@@ -20,12 +20,13 @@ deno task sync:primeagen           # Sync primeagen stack configs
 
 Add `--dry` or `-d` to `run`/`sync` for dry-run mode.
 
-### Docker Testing
+### Manual Docker Testing
+
+Test tasks in an isolated Docker container:
 
 ```bash
-make test-all                      # Run all primeagen tasks in Docker (full integration test)
-make test TASK=zsh                 # Test a specific task in Docker
 make test-dry                      # Dry-run all tasks in Docker
+make test TASK=zsh                 # Test a specific task in Docker
 make test STACK=larr               # Test a different stack
 make shell                         # Open interactive shell for debugging
 make clean                         # Remove test Docker image
