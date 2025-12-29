@@ -1,4 +1,4 @@
-# larr-dev-env Documentation
+# dev-env Documentation
 
 A Deno-based development environment manager. Clone the repo, run one command, and have an identical environment on any machine.
 

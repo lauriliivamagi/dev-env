@@ -103,7 +103,7 @@ Path to the dev-env repository. Defaults to current working directory.
 
 ```bash
 # Override to run from different location
-DEV_ENV=/path/to/larr-dev-env deno task run
+DEV_ENV=/path/to/dev-env deno task run
 ```
 
 ### XDG_CONFIG_HOME

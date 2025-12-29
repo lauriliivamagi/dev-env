@@ -1,7 +1,7 @@
 # Gitleaks configuration
 # https://github.com/gitleaks/gitleaks
 
-title = "larr-dev-env gitleaks config"
+title = "dev-env gitleaks config"
 
 # Extend the default rules
 [extend]

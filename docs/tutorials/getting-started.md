@@ -32,8 +32,8 @@ deno --version
 ## Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/larr-dev-env.git
-cd larr-dev-env
+git clone https://github.com/yourusername/dev-env.git
+cd dev-env
 ```
 
 ## Step 3: Explore What's Available
@@ -135,7 +135,7 @@ Your development environment is now reproducible. On a new machine:
 
 ```bash
 git clone <repo>
-cd larr-dev-env
+cd dev-env
 deno task run
 deno task sync
 ```

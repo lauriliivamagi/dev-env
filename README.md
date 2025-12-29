@@ -1,4 +1,4 @@
-# larr-dev-env
+# dev-env
 
 A Deno-based development environment manager.
 

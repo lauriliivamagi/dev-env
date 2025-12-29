@@ -202,7 +202,7 @@ mkdir -p ~/.config/sops/age
 ```bash
 # 1. Clone the repo
 git clone <repo-url>
-cd larr-dev-env
+cd dev-env
 
 # 2. Install tools
 deno task run sops dotenvx

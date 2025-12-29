@@ -51,7 +51,7 @@ import { getContext } from "./lib/mod.ts";
 
 const ctx = getContext({ dryRun: false });
 // ctx.home = "/home/username"
-// ctx.devEnv = "/path/to/larr-dev-env"
+// ctx.devEnv = "/path/to/dev-env"
 // ctx.configHome = "/home/username/.config"
 ```
 
@@ -182,7 +182,7 @@ const path = expandPath("~/.config/nvim", ctx);
 // Returns: "/home/username/.config/nvim"
 
 const path2 = expandPath("$DEV_ENV/env", ctx);
-// Returns: "/path/to/larr-dev-env/env"
+// Returns: "/path/to/dev-env/env"
 ```
 
 ## Task Discovery
