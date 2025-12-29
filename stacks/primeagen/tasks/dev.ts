@@ -1,5 +1,7 @@
 import { type TaskContext } from "../../../src/lib/mod.ts";
-import { apt, aptUpdate, goInstall } from "../../../src/lib/shell.ts";
+import { apt, aptUpdate, goInstall, pnpm } from "../../../src/lib/shell.ts";
+
+export const dependsOn = ["node"];
 
 export async function run(ctx: TaskContext): Promise<void> {
   await aptUpdate(ctx);
@@ -13,9 +15,9 @@ export async function run(ctx: TaskContext): Promise<void> {
     "btop",
     "bc",
     "gimp",
-    "tldr",
     "fonts-font-awesome",
   ]);
 
+  await pnpm(ctx, ["add", "-g", "tldr"]);
   await goInstall(ctx, "github.com/air-verse/air@latest");
 }
