@@ -1,0 +1,31 @@
+[init]
+	templatedir = ~/.git_template
+	defaultBranch = master
+[user]
+	name = Lauri Liivamägi
+	email = lauri@relion.info
+[color]
+	ui = true
+[alias]
+  lg1 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
+  lg2 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all
+  lg = !"git lg1"
+  g = grep --break --heading --line-number
+  sp = !git stash && git pull && git stash pop
+  ignored = !git ls-files -v | grep "^[[:lower:]]"
+[core]
+	editor = vim
+	autocrlf = input
+	excludesfile = ~/.gitignore
+[grep]
+	extendregexp = true
+	linenumber = true
+[push]
+	default = simple
+[pull]
+	rebase = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

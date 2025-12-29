@@ -1,0 +1,31 @@
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# General
+alias sup='sudo apt update && sudo apt upgrade'
+alias open='xdg-open'
+
+alias lsofl='sudo lsof -i -P -n | grep LISTEN'
+
+# bpaste
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
+
+# Git
+alias gitall='ls | xargs -P10 -I{} git -C {}'
+alias pullall='ls | xargs -P10 -I{} git -C {} pull'
+
+# Ripgrep
+alias rgf='rg --files | rg'
+
+# Claude Code
+alias cld='claude'
+alias cldt='claude-trace'
+
+# DStask
+alias t='task tui'
+
+# pnpm
+alias npm=pnpm
