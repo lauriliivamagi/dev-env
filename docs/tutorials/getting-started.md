@@ -2,6 +2,30 @@
 
 This tutorial walks you through your first run of the development environment manager.
 
+## Quick Start
+
+```bash
+# 1. Install Deno
+curl -fsSL https://deno.land/install.sh | sh
+export PATH="$HOME/.deno/bin:$PATH"
+
+# 2. Clone repo
+git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
+cd ~/dev-env
+
+# 3. Run tasks for your stack
+deno task run -s larr
+
+# 4. Sync configs
+deno task sync -s larr
+```
+
+For secrets setup (SSH keys, API tokens), see the [Secrets Management](../../CLAUDE.md#secrets-management) section.
+
+---
+
+*The rest of this tutorial explains each step in detail.*
+
 ## Prerequisites
 
 - Ubuntu or Debian-based Linux system
@@ -32,8 +56,8 @@ deno --version
 ## Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/dev-env.git
-cd dev-env
+git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
+cd ~/dev-env
 ```
 
 ## Step 3: Explore What's Available
@@ -154,7 +178,7 @@ deno task sync -s primeagen
 
 - **Customize**: Edit files in `stacks/primeagen/env/` and run `deno task sync -s primeagen`
 - **Add tasks**: Create new files in `stacks/primeagen/tasks/` for your tools
-- **Create your own stack**: `mkdir -p stacks/mystack/{tasks,env,resources,secrets}`
+- **Create your own stack**: `mkdir -p stacks/mystack/{tasks,env,secrets}`
 - **Understand**: Read the [Explanation docs](../explanation/) for design rationale
 
 ## Quick Reference

@@ -173,10 +173,7 @@ Note: Built-in utilities like `apt()` and `runOrFail()` handle dry run automatic
 export async function run(ctx: TaskContext): Promise<void> {
   const configDir = `${ctx.configHome}/mytool`;
   const binDir = `${ctx.home}/.local/bin`;
-
-  // Use stackRoot for stack-specific resources
   const srcDir = `${ctx.stackRoot}/env/.config/mytool`;
-  const resourceDir = `${ctx.stackRoot}/resources`;
 
   await fs.copyDir(ctx, srcDir, configDir);
 }
@@ -193,8 +190,8 @@ const path = expandPath("~/.config/nvim", ctx);
 const path2 = expandPath("$DEV_ENV/env", ctx);
 // Returns: "/path/to/dev-env/env"
 
-const path3 = expandPath("$STACK_ROOT/resources", ctx);
-// Returns: "/path/to/dev-env/stacks/primeagen/resources"
+const path3 = expandPath("$STACK_ROOT/secrets", ctx);
+// Returns: "/path/to/dev-env/stacks/primeagen/secrets"
 ```
 
 ## Task Discovery

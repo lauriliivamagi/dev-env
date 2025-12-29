@@ -98,13 +98,11 @@ stacks/               # Isolated environment configurations
       .local/         # -> ~/.local
       .zshrc          # -> ~/.zshrc
       ...
-    resources/        # Static resources (fonts, scripts)
     secrets/          # Encrypted secrets (SOPS + age)
       ssh.enc.yaml    # SSH keys (encrypted)
   larr/               # Your custom stack (create your own!)
     tasks/
     env/
-    resources/
     secrets/
 
 .env                  # API tokens (encrypted with dotenvx)
@@ -113,11 +111,11 @@ stacks/               # Isolated environment configurations
 
 ## Stacks
 
-A **stack** is a complete, isolated dev environment configuration. Each stack has its own tasks, configs, resources, and secrets. Stacks don't share anything with each other.
+A **stack** is a complete, isolated dev environment configuration. Each stack has its own tasks, configs, and secrets. Stacks don't share anything with each other.
 
 ```bash
 # Create a new stack
-mkdir -p stacks/mystack/{tasks,env,resources,secrets}
+mkdir -p stacks/mystack/{tasks,env,secrets}
 
 # Run your stack
 deno task run -s mystack

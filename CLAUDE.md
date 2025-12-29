@@ -2,6 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## First-time Setup
+
+```bash
+# 1. Install Deno
+curl -fsSL https://deno.land/install.sh | sh
+export PATH="$HOME/.deno/bin:$PATH"
+
+# 2. Clone repo
+git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
+cd ~/dev-env
+
+# 3. Run tasks for your stack
+deno task run -s larr
+
+# 4. Sync configs
+deno task sync -s larr
+```
+
+For secrets setup (SSH keys, API tokens), see the [Secrets Management](#secrets-management) section below.
+
 ## Commands
 
 ```bash
@@ -41,7 +61,6 @@ This is a Deno-based development environment manager organized around **stacks**
 A stack is a complete, isolated dev environment configuration. Each stack has its own:
 - `tasks/` - Setup task modules
 - `env/` - Configuration files to sync
-- `resources/` - Static resources (fonts, scripts, etc.)
 - `secrets/` - Encrypted secrets (SSH keys, etc.)
 
 ```
@@ -49,12 +68,10 @@ stacks/
 ├── primeagen/           # ThePrimeagen-inspired stack
 │   ├── tasks/
 │   ├── env/
-│   ├── resources/
 │   └── secrets/
 └── larr/                # Your custom stack
     ├── tasks/
     ├── env/
-    ├── resources/
     └── secrets/
 ```
 
@@ -114,9 +131,6 @@ export async function run(ctx: TaskContext): Promise<void> {
   // Shell utilities: apt(), pnpm(), cargoInstall(), gitClone(), curlPipe()
   // File utilities: fs.copyFile(), fs.copyDir(), fs.mkdir(), fs.remove(), fs.writeFile()
   // All lib functions handle ctx.dryRun internally
-
-  // Access stack-specific resources:
-  // const resourcePath = join(ctx.stackRoot, "resources", "myresource");
 }
 ```
 
@@ -144,7 +158,7 @@ Tasks are sorted topologically (dependencies first), with alphabetical ordering 
 ## Creating a New Stack
 
 ```bash
-mkdir -p stacks/mystack/{tasks,env,resources,secrets}
+mkdir -p stacks/mystack/{tasks,env,secrets}
 ```
 
 Add tasks to `stacks/mystack/tasks/`, configs to `stacks/mystack/env/`, etc. Then run:
