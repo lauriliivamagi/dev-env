@@ -20,6 +20,8 @@ paths = [
   '''\.enc\.yaml\.example$''',
   # Documentation (contains example key formats, not real secrets)
   '''docs/.*\.md$''',
+  # VS Code keybindings (contain "key" fields for shortcuts, not secrets)
+  '''keybindings\.json$''',
 ]
 
 # Global stopwords for common false positives

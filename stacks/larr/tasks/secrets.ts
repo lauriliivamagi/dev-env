@@ -21,6 +21,13 @@ export async function run(ctx: TaskContext): Promise<void> {
     return;
   }
 
+  // Check if age key exists before attempting decryption
+  const ageKeyFile = join(ctx.configHome, "sops", "age", "keys.txt");
+  if (!await exists(ageKeyFile)) {
+    log.warn(`Age key not found at ${ageKeyFile} - skipping SSH key installation`);
+    return;
+  }
+
   // Create ~/.ssh directory with proper permissions
   const sshDir = `${ctx.home}/.ssh`;
   await fs.mkdir(ctx, sshDir);
@@ -36,9 +43,14 @@ export async function run(ctx: TaskContext): Promise<void> {
     return;
   }
 
+  // sops is installed to ~/.local/bin, add it to PATH
+  const currentPath = Deno.env.get("PATH") ?? "";
+  const extendedPath = `${ctx.home}/.local/bin:${currentPath}`;
+
   const result = await shellRun(ctx, ["sops", "-d", secretsFile], {
     stdout: "piped",
     stderr: "piped",
+    env: { PATH: extendedPath },
   });
 
   if (result.code !== 0) {

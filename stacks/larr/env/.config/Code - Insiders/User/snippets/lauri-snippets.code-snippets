@@ -1,0 +1,357 @@
+{
+  "console.log('$1', $2); $0": {
+    "prefix": "_cl",
+    "body": ["console.log({$1});", "$0"],
+    "description": "console.log({$1}); $0"
+  },
+  "// ^?": {
+    "prefix": "_?",
+    "body": ["// ^?"],
+    "description": "console.log({$1}); $0"
+  },
+  "R.tap(console.log.bind(console))": {
+    "prefix": "_tap",
+    "body": ["R.tap(console.log.bind(console)),"],
+    "description": "console.log({$1}); $0"
+  },
+  "($1) => {$2}": {
+    "prefix": "_arr",
+    "body": ["($1) => {$2}"],
+    "description": "($1) => {$2}"
+  },
+  "describe('$1', () => {$2})": {
+    "prefix": "_describe",
+    "body": ["describe('$1', () => {$2});"],
+    "description": "describe('$1', () => {$2})"
+  },
+  "it('$1', () => {$2})": {
+    "prefix": "_it",
+    "body": ["it('$1', () => {$2});"],
+    "description": "it('$1', () => {$2})"
+  },
+  "test('$1', () => {$2})": {
+    "prefix": "_test",
+    "body": ["test('$1', () => {$2});"],
+    "description": "test('$1', () => {$2})"
+  },
+  "const [$1, $2] = React.useState($3)": {
+    "prefix": "_us",
+    "body": ["const [$1, $2] = React.useState($3)"],
+    "description": "const [$1, $2] = useState($3)"
+  },
+  "Debug in JSX": {
+    "prefix": "_debug-in-jsx",
+    "body": ["<pre>{JSON.stringify({$1}, null, 2)}</pre>"],
+    "description": "<pre>{JSON.stringify($1, null, 2)}</pre>"
+  },
+  "React.useEffect(() => {$1}, [$2])": {
+    "prefix": "_ue",
+    "body": ["React.useEffect(() => {$1}, [$2])"],
+    "description": "React.useEffect(() => {$1}, [$2])"
+  },
+  "const [state, dispatch] = React.useReducer(reducer, initialArg)": {
+    "prefix": "_ur",
+    "body": [
+      "const [state, dispatch] = React.useReducer((state, action) => {$1}, {$2})"
+    ],
+    "description": "const [state, dispatch] = React.useReducer(reducer, initialArg)"
+  },
+  "React component": {
+    "prefix": "_react",
+    "body": [
+      "import React from 'react';",
+      "import classNames from \"classnames\"",
+      "import styles from './${TM_FILENAME_BASE}.module.scss';",
+      "",
+      "export interface ${TM_FILENAME_BASE}Props {",
+      "\tclassName?: string;",
+      "}",
+      "",
+      "export const $TM_FILENAME_BASE: React.FC<${TM_FILENAME_BASE}Props> = (props) => {",
+      "\tconst { className } = props;",
+      "",
+      "\treturn (",
+      "\t\t<div className={classNames(styles[\"wrap\"], className)}>",
+      "\t\t</div>",
+      "\t);",
+      "}"
+    ],
+    "description": "Creates new exported react component"
+  },
+  "React prop": {
+    "prefix": "_prop",
+    "body": ["$1={$2}$3"],
+    "description": "$1={$2}$3"
+  },
+  "XState machine": {
+    "prefix": "_xstate",
+    "body": [
+      "import React from \"react\";",
+      "import { useMachine } from \"@xstate/react\";",
+      "import { createMachine } from \"xstate\";",
+      "",
+      "// all possible state and events enums",
+      "export enum ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum {",
+      "  IDLE = \"IDLE\",",
+      "  TRANSITIONING = \"TRANSITIONING\",",
+      "  SUCCESS = \"SUCCESS\",",
+      "  FAILURE = \"FAILURE\",",
+      "}",
+      "",
+      "export enum ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}EventEnum {",
+      "  LOAD_STATE = \"LOAD_STATE\",",
+      "  START_EVENT = \"START_EVENT\",",
+      "  FINISH_EVENT = \"FINISH_EVENT\",",
+      "}",
+      "",
+      "// type definitions for use with the createMachine",
+      "export type ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineContext = {",
+      "  // EXAMPLE",
+      "  [key: string]: string;",
+      "};",
+      "",
+      "export type ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineState = {",
+      "  value: keyof typeof ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum;",
+      "  context: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineContext;",
+      "};",
+      "",
+      "export type ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineEvent =",
+      "  | { type: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}EventEnum.LOAD_STATE; stateToLoad: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum }",
+      "  | { type: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}EventEnum.START_EVENT }",
+      "  | { type: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}EventEnum.FINISH_EVENT };",
+      "",
+      "// input parameters for the machine creating factory",
+      "export type ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineProps = {",
+      "  // EXAMPLE",
+      "  someEffect: () => Promise<any>;",
+      "};",
+      "",
+      "// create parameterized statechart",
+      "export function create${TM_FILENAME_BASE/(.*)(\\..*)/$1/}Machine({ someEffect }: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineProps) {",
+      "  return createMachine<${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineContext, ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineEvent, ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineState>({",
+      "    id: \"${TM_FILENAME_BASE/(.*)(\\..*)/$1/}Machine\",",
+      "    initial: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.IDLE,",
+      "    states: {",
+      "      [${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.IDLE]: {",
+      "        on: {",
+      "          START_EVENT: { target: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.TRANSITIONING },",
+      "        },",
+      "      },",
+      "      [${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.TRANSITIONING]: {",
+      "        invoke: {",
+      "          id: \"execute-some-effect\",",
+      "          src: someEffect,",
+      "          onDone: {",
+      "            target: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.SUCCESS,",
+      "          },",
+      "          onError: { target: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.FAILURE },",
+      "        },",
+      "      },",
+      "      [${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.SUCCESS]: {},",
+      "      [${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.FAILURE]: {},",
+      "    },",
+      "    on: {",
+      "      LOAD_STATE: [",
+      "        {",
+      "          target: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.IDLE,",
+      "          internal: true,",
+      "          cond: (_context, event) => {",
+      "            return event.stateToLoad === ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.IDLE;",
+      "          },",
+      "        },",
+      "        {",
+      "          target: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.SUCCESS,",
+      "          internal: true,",
+      "          cond: (_context, event) => {",
+      "            return event.stateToLoad === ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}StateEnum.SUCCESS;",
+      "          },",
+      "        },",
+      "      ],",
+      "    },",
+      "  });",
+      "}",
+      "",
+      "// hook for component usage",
+      "export function use${TM_FILENAME_BASE/(.*)(\\..*)/$1/}Machine({ someEffect }: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}MachineProps) {",
+      "  const machine = create${TM_FILENAME_BASE/(.*)(\\..*)/$1/}Machine({",
+      "    someEffect,",
+      "  });",
+      "",
+      "  const [state, send] = useMachine(machine);",
+      "",
+      "  // when machine props change, issue the load state event",
+      "  // React.useEffect(() => {",
+      "  //  send({",
+      "  //    type: ${TM_FILENAME_BASE/(.*)(\\..*)/$1/}EventEnum.LOAD_STATE,",
+      "  //    stateToLoad: someExternalThing.xxx === ... // determine using machine props",
+      "  //  });",
+      "  // }, [someExternalThing, send]);",
+      "",
+      "  return { state, send };",
+      "}"
+    ],
+    "description": "XState machine with a React hook"
+  },
+  "Debug in XState": {
+    "prefix": "_debug-in-xstate",
+    "body": [
+      "entry: (context, event) => {",
+      "  console.log({ type: event.type, context });",
+      "},"
+    ],
+    "description": "Add entry action with log"
+  },
+  "Cosmos fixture": {
+    "prefix": "_fixture",
+    "body": [
+      "import React from 'react';",
+      "import { ${TM_FILENAME_BASE/(.*)(\\..*)/$1/} } from './${TM_FILENAME_BASE/(.*)(\\..*)/$1/}';",
+      "import { CosmosWrapper } from '../CosmosWrapper/CosmosWrapper';",
+      "import styles from '../CosmosWrapper/CosmosWrapper.module.scss';",
+      "",
+      "export default {",
+      "\tdefault: () => {",
+      "\treturn <CosmosWrapper innerClassNames={styles[\"background-rfi\"]}><${TM_FILENAME_BASE/(.*)(\\..*)/$1/}/></CosmosWrapper>;",
+      "\t},",
+      "};"
+    ],
+    "description": "Creates a cosmos fixture"
+  },
+  "&::before": {
+    "prefix": "_before",
+    "body": [
+      "&[data-state]::before {",
+      "\tposition: absolute;",
+      "\ttop: 20px;",
+      "\tmargin-left: auto;",
+      "\tmargin-top: 20px;",
+      "\tpadding: 12px;",
+      "\tborder-radius: 4px;",
+      "\tbackground: gray;",
+      "\tcolor: white;",
+      "\tcontent: \"data-state: \" attr(data-state);",
+      "\tfont-family: monospace;",
+      "}"
+    ],
+    "description": "Debug SCSS with ::before"
+  },
+  "className": {
+    "prefix": "_cn",
+    "body": ["className=\"$1\""],
+    "description": "className=\"$1\""
+  },
+  "classNames": {
+    "prefix": "_cns",
+    "body": ["className={classNames(styles[\"$1\"], styles[\"$2\"])}"],
+    "description": "className={classNames(styles[\"$1\"], styles[\"$2\"])}"
+  },
+  "div": {
+    "prefix": "_div",
+    "body": ["<div className=\"$1\">$2</div>"],
+    "description": "<div className=\"$1\">$2</div>"
+  },
+  "fragment": {
+    "prefix": "_fragment",
+    "body": ["<>", "\t$1", "</>"],
+    "description": "<>$1</>"
+  },
+  "placeholder": {
+    "prefix": "_placeholder",
+    "body": ["${$1}"],
+    "description": "${$1}"
+  },
+  "function $1($2) {$3}": {
+    "prefix": "_fun",
+    "body": ["function $1($2) {", "$3", "}"],
+    "description": "function $1($2) {$3}"
+  },
+  "border": {
+    "prefix": "_outline",
+    "body": "outline: 1px solid red;",
+    "description": "Add red outline"
+  },
+  "border all": {
+    "prefix": "_all",
+    "body": "* { outline: 1px solid gray; }",
+    "description": "Add gray outline around all elements on page."
+  },
+  "x-ray": {
+    "prefix": "_xray",
+    "body": [
+      "* { background-color: rgba(255,0,0,.2); }",
+      "* * { background-color: rgba(0,255,0,.2); }",
+      "* * * { background-color: rgba(0,0,255,.2); }",
+      "* * * * { background-color: rgba(255,0,255,.2); }",
+      "* * * * * { background-color: rgba(0,255,255,.2); }",
+      "* * * * * * { background-color: rgba(255,255,0,.2); }",
+      "* * * * * * * { background-color: rgba(255,0,0,.2); }",
+      "* * * * * * * * { background-color: rgba(0,255,0,.2); }",
+      "* * * * * * * * * { background-color: rgba(0,0,255,.2); }"
+    ],
+    "description": "Layout X-Ray"
+  },
+  "SCSS": {
+    "prefix": "_scss",
+    "body": [
+      "@import \"../../theme/variables\";",
+      "",
+      ".wrap {",
+      "  display: flex;",
+      "}"
+    ]
+  },
+  "ExpandRecursively<T>": {
+    "prefix": "_expand-recursively-ts",
+    "body": [
+      "export type ExpandRecursively<T> = T extends (...args: infer A) => infer R",
+      " ? (...args: ExpandRecursively<A>) => ExpandRecursively<R> ",
+      " : T extends object ",
+      " ? T extends infer O ",
+      " ? { [K in keyof O]: ExpandRecursively<O[K]> } ",
+      " : never ",
+      " : T;"
+    ],
+    "description": "export type ExpandRecursively<T> ..."
+  },
+  "Prettify<T>": {
+    "prefix": "_prettify-ts",
+    "body": ["type Prettify<T> = { [K in keyof T]: T[K]; } & {};"],
+    "description": "type Prettify<T>"
+  },
+  "date": {
+    "prefix": "_date",
+    "scope": "markdown,yaml",
+    "body": "$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
+    "description": "today's date"
+  },
+  "time": {
+    "prefix": "_time",
+    "scope": "markdown,yaml",
+    "body": "$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE $CURRENT_HOUR:$CURRENT_MINUTE:$CURRENT_SECOND",
+    "description": "time"
+  },
+  "link": {
+    "prefix": "_link",
+    "scope": "markdown",
+    "body": "[$1]($2)",
+    "description": "Markdown link"
+  },
+  "checklist": {
+    "prefix": "_check",
+    "scope": "markdown",
+    "body": "- [ ] $1",
+    "description": "Markdown checklist"
+  },
+  "todo": {
+    "prefix": "_todo",
+    "scope": "markdown",
+    "body": "(Z) $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE +projects.ungroomed **$1** @grooming due:$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE [Task](file:/home/larr/git/Dendron/notes/scratch.$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE-$CURRENT_HOUR-$CURRENT_MINUTE-$CURRENT_SECOND)",
+    "description": "TODO item"
+  },
+  "comment": {
+    "prefix": "_comm",
+    "scope": "markdown,html,xml,txt",
+    "body": "<!-- $1 -->",
+    "description": "XML comment"
+  }
+}

@@ -111,6 +111,9 @@ export async function assertCommandWithPath(
     `${home}/.bun/bin`,
     `${home}/.volta/bin`,
     `${home}/.local/share/pnpm`,
+    `${home}/.opencode/bin`,
+    `${home}/go/bin`,
+    "/usr/local/go/bin",
   ];
   const currentPath = Deno.env.get("PATH") ?? "";
   const extendedPath = [...binDirs, currentPath].join(":");
