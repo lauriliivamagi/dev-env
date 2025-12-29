@@ -30,6 +30,7 @@ export async function syncConfigs(ctx: TaskContext): Promise<void> {
     ".zsh_profile",
     ".xprofile",
     ".tmux-sessionizer",
+    ".p10k.zsh",
   ];
 
   for (const dotfile of dotfiles) {
