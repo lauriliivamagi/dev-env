@@ -1,0 +1,30 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "larr-dev-env gitleaks config"
+
+# Extend the default rules
+[extend]
+useDefault = true
+
+# Allow encrypted files - these contain encrypted secrets, not plaintext
+[allowlist]
+description = "Allow encrypted secret files and documentation"
+paths = [
+  # dotenvx encrypted .env files (contain encrypted values)
+  '''\.env$''',
+  # SOPS encrypted YAML files
+  '''secrets/.*\.enc\.yaml$''',
+  # Example/template files (contain placeholder values)
+  '''\.example$''',
+  '''\.enc\.yaml\.example$''',
+  # Documentation (contains example key formats, not real secrets)
+  '''docs/.*\.md$''',
+]
+
+# Global stopwords for common false positives
+stopwords = [
+  "your-api-key",
+  "placeholder",
+  "changeme",
+]

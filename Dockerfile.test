@@ -1,0 +1,54 @@
+FROM ubuntu:25.10
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Core dependencies
+RUN apt-get update && apt-get install -y \
+    sudo \
+    curl \
+    wget \
+    git \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    locales \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locale (some tools need this)
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Create test user with passwordless sudo
+RUN useradd -m -s /bin/bash testuser \
+    && echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Install Deno system-wide
+RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh
+ENV PATH="/usr/local/bin:${PATH}"
+
+# Environment variables for TaskContext
+ENV HOME=/home/testuser
+ENV USER=testuser
+ENV XDG_CONFIG_HOME=/home/testuser/.config
+ENV DEV_ENV=/home/testuser/dev-env
+
+# For non-interactive rustup installation
+ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
+ENV CARGO_HOME=/home/testuser/.cargo
+ENV RUSTUP_HOME=/home/testuser/.rustup
+
+# Copy project files
+WORKDIR /home/testuser/dev-env
+COPY --chown=testuser:testuser . .
+
+# Switch to test user
+USER testuser
+
+# Cache Deno dependencies
+RUN deno cache src/cli.ts
+
+# Default: run all tasks
+CMD ["deno", "task", "run"]

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Fetch status from the server
+msg=$(curl -s -m 2 http://localhost:42069/waybar_status 2>/dev/null)
+
+# Check if curl succeeded
+if [ $? -eq 0 ] && [ -n "$msg" ]; then
+    # Format output for Waybar (JSON)
+    echo $msg
+else
+    # Display error if server is down or curl failed
+    echo "{\"text\": \"✗ - Down\", \"class\": \"down\"}"
+fi
+

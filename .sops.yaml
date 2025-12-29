@@ -1,0 +1,8 @@
+# SOPS configuration for secrets encryption
+# Replace the age key with your actual public key after running:
+#   age-keygen -o ~/.config/sops/age/keys.txt
+#   cat ~/.config/sops/age/keys.txt | grep "public key:"
+creation_rules:
+  - path_regex: secrets/.*\.enc\.yaml$
+    age: >-
+      age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

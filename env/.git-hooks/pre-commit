@@ -1,0 +1,33 @@
+#!/bin/sh
+# Pre-commit hook: Scan staged files for secrets using gitleaks
+#
+# This hook prevents committing plaintext secrets. Encrypted files
+# (.env via dotenvx, secrets/*.enc.yaml via SOPS) are allowed.
+
+set -e
+
+# Skip if gitleaks not installed
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-commit] gitleaks not found, skipping secret scan"
+  echo "[pre-commit] Install with: deno task run gitleaks"
+  exit 0
+fi
+
+# Run gitleaks on staged files
+echo "[pre-commit] Scanning for secrets..."
+
+if gitleaks protect --staged --verbose --redact; then
+  echo "[pre-commit] No secrets detected"
+else
+  echo ""
+  echo "=============================================="
+  echo "  COMMIT BLOCKED: Secrets detected!"
+  echo "=============================================="
+  echo ""
+  echo "Options:"
+  echo "  1. Remove the secret from the file"
+  echo "  2. Use dotenvx/SOPS to encrypt it"
+  echo "  3. Add to .gitleaks.toml allowlist (if false positive)"
+  echo ""
+  exit 1
+fi

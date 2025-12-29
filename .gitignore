@@ -1,0 +1,24 @@
+# Claude Code local settings
+.claude/
+
+# Secrets - private keys (never commit)
+.env.keys
+
+# Unencrypted secrets (should be encrypted before committing)
+secrets/*.yaml
+!secrets/*.enc.yaml
+!secrets/*.enc.yaml.example
+
+# Build artifacts
+/target/
+/dist/
+
+# Editor
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

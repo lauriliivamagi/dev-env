@@ -1,0 +1,19 @@
+# Example tmuxinator project: tmuxinator start dev
+# Customize this template for your workflow
+# Documentation: https://github.com/tmuxinator/tmuxinator
+
+name: dev
+root: ~/
+
+windows:
+  - editor:
+      layout: main-vertical
+      panes:
+        - nvim
+        - # empty pane for commands
+  - server:
+      panes:
+        - # start dev server here
+  - git:
+      panes:
+        - git status
