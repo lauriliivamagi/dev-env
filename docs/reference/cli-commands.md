@@ -172,13 +172,15 @@ The CLI is exposed through `deno.json` tasks:
 ```json
 {
   "tasks": {
-    "run": "deno run -A src/cli.ts run",
-    "sync": "deno run -A src/cli.ts sync",
-    "run:primeagen": "deno run -A src/cli.ts run --stack primeagen",
-    "sync:primeagen": "deno run -A src/cli.ts sync --stack primeagen",
+    "run": "deno run --allow-all src/cli.ts run",
+    "sync": "deno run --allow-all src/cli.ts sync",
+    "run:primeagen": "deno run --allow-all src/cli.ts run --stack primeagen",
+    "sync:primeagen": "deno run --allow-all src/cli.ts sync --stack primeagen",
+    "compile": "deno compile --allow-all -o dev-env src/cli.ts",
     "check": "deno check src/**/*.ts stacks/**/*.ts",
     "lint": "deno lint src/ stacks/",
-    "compile": "deno compile -A -o dev-env src/cli.ts"
+    "test": "deno test --allow-all src/",
+    "test:task": "deno test --allow-all --filter"
   }
 }
 ```
@@ -191,6 +193,13 @@ deno task check
 
 # Lint source code
 deno task lint
+
+# Run all unit tests
+deno task test
+
+# Run tests matching a pattern
+deno task test:task "copyFile"     # Tests containing "copyFile"
+deno task test:task "shell"        # Tests containing "shell"
 
 # Compile to standalone binary
 deno task compile

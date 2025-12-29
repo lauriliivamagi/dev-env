@@ -98,6 +98,81 @@ await assertInGroup("video");
 User is not a member of group 'docker'
 ```
 
+### assertCommandWithPath()
+
+Assert that a binary exists at a specific path AND is accessible via PATH. This is the recommended verification for tools installed to user directories.
+
+```typescript
+async function assertCommandWithPath(
+  home: string,
+  cmd: string,
+  binPath: string,
+  ...args: string[]
+): Promise<void>
+```
+
+**Parameters:**
+- `home` - User's home directory (typically `ctx.home`)
+- `cmd` - Command name to verify
+- `binPath` - Expected absolute path to the binary
+- `args` - Optional arguments to run (verifies command executes successfully)
+
+**Behavior:**
+1. Asserts the binary file exists at `binPath`
+2. Builds extended PATH with common user binary directories
+3. Runs the command with args and verifies exit code 0
+
+**Supported PATH directories:**
+- `~/.local/bin`
+- `~/.cargo/bin`
+- `~/.deno/bin`
+- `~/.bun/bin`
+- `~/.volta/bin`
+- `~/.local/share/pnpm`
+- `~/.opencode/bin`
+- `~/go/bin`
+- `/usr/local/go/bin`
+
+**Example:**
+```typescript
+// Verify Deno installation
+await v.assertCommandWithPath(
+  ctx.home,
+  "deno",
+  `${ctx.home}/.deno/bin/deno`,
+  "--version"
+);
+
+// Verify Rust toolchain
+await v.assertCommandWithPath(
+  ctx.home,
+  "rustc",
+  `${ctx.home}/.cargo/bin/rustc`,
+  "--version"
+);
+await v.assertCommandWithPath(
+  ctx.home,
+  "cargo",
+  `${ctx.home}/.cargo/bin/cargo`,
+  "--version"
+);
+```
+
+**Error messages:**
+```
+File '/home/user/.deno/bin/deno' does not exist
+Command 'deno' not found in PATH (expected at /home/user/.deno/bin/deno)
+Command 'deno' exited with code 1
+```
+
+**When to use:**
+Use `assertCommandWithPath` when:
+- The tool is installed to a user directory (`~/.cargo/bin`, `~/.deno/bin`, etc.)
+- You want to verify both file existence AND command execution
+- The PATH may not include the installation directory in the current shell session
+
+This combines the benefits of `assertFile` (verifies installation location) with `assertCommand` (verifies execution).
+
 ## Usage in Tasks
 
 Import verification utilities and use in `verify()` function:

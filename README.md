@@ -13,17 +13,21 @@ And when you need to set up a second machine? You do it all over again, forgetti
 Clone this repo. Run one command. Done. *(Ubuntu only)*
 
 ```bash
-git clone <repo-url> ~/dev
-cd ~/dev
+git clone <repo-url> ~/dev-env
+cd ~/dev-env
 
-# Install all tools
-deno task run
+# Install all tools for your stack
+deno task run -s larr     # or: deno task run -s primeagen
 
 # Sync all configs
-deno task sync
+deno task sync -s larr    # or: deno task sync -s primeagen
 ```
 
 Every tool installed. Every config in place. Every machine identical.
+
+**Available stacks:**
+- `larr` - Modern development stack (32 tasks)
+- `primeagen` - ThePrimeagen-inspired stack (29 tasks)
 
 ## What You Get
 
@@ -37,32 +41,36 @@ Every tool installed. Every config in place. Every machine identical.
 
 ```bash
 # Preview what will be installed (safe, makes no changes)
-deno task run --dry
+deno task run -s larr --dry
 
 # Run specific tasks
-deno task run rust node neovim
+deno task run -s larr rust neovim docker
 
 # Sync dotfiles and configs
-deno task sync
+deno task sync -s larr
 
 # Test a task in Docker (for development)
-make test TASK=zsh
+make test STACK=larr TASK=zsh
 ```
 
 ## Available Tasks
 
+Tasks common to both stacks:
+
 | Task | Description |
 |------|-------------|
 | `rust` | Rust toolchain via rustup |
-| `node` | Node.js, npm, Deno, Bun |
-| `neovim` | Neovim from source |
 | `docker` | Docker and docker-compose |
+| `neovim` | Neovim editor |
 | `zsh` | Zsh with plugins |
-| `tmux` | Tmux with config |
+| `tmux` | Tmux terminal multiplexer |
+| `volta` | JavaScript toolchain manager |
 | `sops` | SOPS + age for secrets |
 | `dotenvx` | dotenvx for API tokens |
 | `gitleaks` | Secret scanning |
-| ... | [See all tasks](docs/reference/cli-commands.md) |
+| `ghostty` | Ghostty terminal emulator |
+
+See [task-discovery.md](docs/explanation/task-discovery.md) for complete task lists.
 
 ## Secrets Management
 

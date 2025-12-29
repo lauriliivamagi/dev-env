@@ -25,6 +25,11 @@ const FONT_SOURCES: FontSource[] = [
     url: "https://github.com/googlefonts/roboto/releases/download/v2.138/roboto-android.zip",
     ttfPath: "",
   },
+  {
+    name: "Meslo",
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Meslo.zip",
+    ttfPath: "",
+  },
 ];
 
 export async function run(ctx: TaskContext): Promise<void> {

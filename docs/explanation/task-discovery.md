@@ -93,18 +93,22 @@ deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 
 This provides deterministic execution while respecting dependency constraints.
 
-## Current Tasks (primeagen stack)
+## Current Tasks
 
-As of writing, the following tasks exist in the primeagen stack:
+### primeagen stack (29 tasks)
 
 | Task | Purpose |
 |------|---------|
-| `dev` | Development tools |
-| `docker` | Docker and container tools |
+| `cht` | cht.sh CLI cheat sheets |
+| `dev` | Development tools (build-essential, etc.) |
+| `docker` | Docker and docker-compose |
+| `dotenvx` | Environment variable encryption |
 | `eleven-tools` | Various CLI utilities |
 | `emoji` | Emoji picker setup |
 | `gdb` | GDB debugger |
 | `ghostty` | Ghostty terminal emulator |
+| `git-hooks` | Pre-commit hooks |
+| `gitleaks` | Secret scanning |
 | `i3` | i3 window manager |
 | `keyboard` | Keyboard configuration |
 | `libs` | System libraries and dependencies |
@@ -115,9 +119,52 @@ As of writing, the following tasks exist in the primeagen stack:
 | `php` | PHP runtime |
 | `rofi` | Rofi application launcher |
 | `rust` | Rust toolchain |
+| `secrets` | SSH key installation (depends on sops) |
+| `sops` | SOPS + age encryption |
 | `tmux` | tmux terminal multiplexer |
+| `tmuxinator` | Tmux session manager |
+| `volta` | JavaScript toolchain manager |
 | `zed` | Zed editor |
-| `zsh` | Zsh shell |
+| `zig` | Zig programming language |
+| `zoxide` | Smart directory navigation |
+| `zsh` | Zsh shell with plugins |
+
+### larr stack (32 tasks)
+
+| Task | Purpose |
+|------|---------|
+| `bat` | Better cat with syntax highlighting |
+| `chtsh` | cht.sh CLI cheat sheets |
+| `claude` | Claude AI integration |
+| `delta` | Git diff viewer |
+| `deno` | Deno runtime (depends on volta) |
+| `dev` | Development tools (build-essential, etc.) |
+| `docker` | Docker and docker-compose |
+| `dotenvx` | Environment variable encryption |
+| `espanso` | Text expansion |
+| `fd` | Fast find alternative |
+| `fonts` | Font installation |
+| `fzf` | Fuzzy finder |
+| `gh` | GitHub CLI |
+| `ghostty` | Ghostty terminal emulator |
+| `git-hooks` | Pre-commit hooks |
+| `gitleaks` | Secret scanning |
+| `go` | Go programming language |
+| `keyboard` | Keyboard configuration |
+| `lazygit` | Git TUI |
+| `neovim` | Neovim editor |
+| `opencode` | Opencode tools |
+| `ripgrep` | Fast grep alternative |
+| `rust` | Rust toolchain |
+| `secrets` | SSH key installation (depends on sops) |
+| `signal` | Signal messenger |
+| `sops` | SOPS + age encryption |
+| `tmux` | tmux terminal multiplexer |
+| `uv` | Python package manager |
+| `volta` | JavaScript toolchain manager |
+| `vscode` | VS Code Insiders |
+| `zig` | Zig programming language |
+| `zsh` | Zsh shell with Powerlevel10k |
 
 ## Why Auto-Discovery?
 
