@@ -4,19 +4,25 @@ This tutorial walks you through your first run of the development environment ma
 
 ## Quick Start
 
+Prerequisites (install if not present):
 ```bash
-# 1. Install Deno
+# System packages
+sudo apt install -y curl git unzip
+
+# Deno runtime
 curl -fsSL https://deno.land/install.sh | sh
 export PATH="$HOME/.deno/bin:$PATH"
+```
 
-# 2. Clone repo
+```bash
+# 1. Clone repo
 git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
 cd ~/dev-env
 
-# 3. Run tasks for your stack
+# 2. Run tasks for your stack
 deno task run -s larr
 
-# 4. Sync configs
+# 3. Sync configs
 deno task sync -s larr
 ```
 
@@ -29,38 +35,33 @@ For secrets setup (SSH keys, API tokens), see the [Secrets Management](../../CLA
 ## Prerequisites
 
 - Ubuntu or Debian-based Linux system
-- sudo access
-- Deno installed (or we'll install it)
+- System packages: `curl`, `git`, `unzip`
+- Deno runtime
 
-## Step 1: Install Deno
-
-If you don't have Deno installed:
-
+Install prerequisites:
 ```bash
+# System packages
+sudo apt install -y curl git unzip
+
+# Deno runtime
 curl -fsSL https://deno.land/install.sh | sh
-```
-
-Add Deno to your PATH:
-
-```bash
 export PATH="$HOME/.deno/bin:$PATH"
 ```
 
-Verify it works:
-
+Verify Deno works:
 ```bash
 deno --version
-# deno 1.x.x
+# deno 2.x.x
 ```
 
-## Step 2: Clone the Repository
+## Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
 cd ~/dev-env
 ```
 
-## Step 3: Explore What's Available
+## Step 2: Explore What's Available
 
 This project uses **stacks** — isolated sets of tasks and configs. See what stacks exist:
 
@@ -86,7 +87,7 @@ docker.ts   i3.ts       neovim.ts   rofi.ts     tmux.ts     ...
 
 Each file is a task that installs or configures something.
 
-## Step 4: Preview with Dry Run
+## Step 3: Preview with Dry Run
 
 Before making changes, preview what would happen:
 
@@ -107,7 +108,7 @@ This shows every command that would run without executing them:
 ...
 ```
 
-## Step 5: Run a Single Task
+## Step 4: Run a Single Task
 
 Start with something simple. The `libs` task installs basic system packages:
 
@@ -127,7 +128,7 @@ You'll see output like:
 [SUCCESS] Completed: libs
 ```
 
-## Step 6: Verify It Worked
+## Step 5: Verify It Worked
 
 The verification ran automatically. You can also check manually:
 
@@ -136,7 +137,7 @@ rg --version
 fzf --version
 ```
 
-## Step 7: Run All Tasks
+## Step 6: Run All Tasks
 
 When you're ready to set up your full environment:
 
@@ -146,7 +147,7 @@ deno task run -s primeagen
 
 This runs all tasks in dependency order. It may take a while depending on what's being installed.
 
-## Step 8: Sync Your Configs
+## Step 7: Sync Your Configs
 
 After tasks install tools, sync your configuration files:
 

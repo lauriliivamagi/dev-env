@@ -21,7 +21,7 @@ endif
 		-e XDG_CONFIG_HOME=/home/testuser/.config \
 		-e DEV_ENV=/home/testuser/dev-env \
 		$(IMAGE) \
-		sh -c "sudo apt-get update -qq && deno task run -s $(STACK) $(TASK)"
+		sh -c "cp test/secrets/*.enc.yaml stacks/$(STACK)/secrets/ && sudo apt-get update -qq && deno task run -s $(STACK) $(TASK)"
 
 # Run all tasks in dry-run mode
 test-dry: build
@@ -39,7 +39,7 @@ test-docker: build
 		-e HOME=/home/testuser \
 		-e USER=testuser \
 		$(IMAGE) \
-		sh -c "sudo apt-get update -qq && deno task run -s $(STACK) docker"
+		sh -c "cp test/secrets/*.enc.yaml stacks/$(STACK)/secrets/ && sudo apt-get update -qq && deno task run -s $(STACK) docker"
 
 # Test the sync command
 test-sync: build
@@ -57,7 +57,7 @@ test-all: build
 		-e HOME=/home/testuser \
 		-e USER=testuser \
 		$(IMAGE) \
-		sh -c "sudo apt-get update -qq && deno task run -s $(STACK)"
+		sh -c "cp test/secrets/*.enc.yaml stacks/$(STACK)/secrets/ && sudo apt-get update -qq && deno task run -s $(STACK)"
 
 # Open interactive shell for debugging
 shell: build

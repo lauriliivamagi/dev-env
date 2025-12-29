@@ -22,6 +22,8 @@ paths = [
   '''docs/.*\.md$''',
   # VS Code keybindings (contain "key" fields for shortcuts, not secrets)
   '''keybindings\.json$''',
+  # Test secrets for Docker testing (intentionally committed test-only keys)
+  '''test/secrets/.*''',
 ]
 
 # Global stopwords for common false positives

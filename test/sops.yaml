@@ -1,0 +1,5 @@
+# SOPS configuration for test secrets encryption
+# This uses a test-only keypair - never use for real secrets
+creation_rules:
+  - path_regex: .*\.yaml$
+    age: age19d34jt3kq3tx3q07crg3an7xtjuq9m5nqvpqzk6ywzcztxuzty8s38k3vh

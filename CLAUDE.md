@@ -4,19 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## First-time Setup
 
+Prerequisites (install if not present):
 ```bash
-# 1. Install Deno
+# System packages
+sudo apt install -y curl git unzip
+
+# Deno runtime
 curl -fsSL https://deno.land/install.sh | sh
 export PATH="$HOME/.deno/bin:$PATH"
+```
 
-# 2. Clone repo
+```bash
+# 1. Clone repo
 git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
 cd ~/dev-env
 
-# 3. Run tasks for your stack
+# 2. Run tasks for your stack
 deno task run -s larr
 
-# 4. Sync configs
+# 3. Sync configs
 deno task sync -s larr
 ```
 
