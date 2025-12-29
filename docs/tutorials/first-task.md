@@ -9,18 +9,18 @@ This tutorial walks you through creating a task from scratch. We'll create a tas
 
 ## Step 1: Create the Task File
 
-Create a new file in `src/tasks/`:
+Create a new file in your stack's `tasks/` directory:
 
 ```bash
-touch src/tasks/htop.ts
+touch stacks/primeagen/tasks/htop.ts
 ```
 
 ## Step 2: Add the Basic Structure
 
-Open `src/tasks/htop.ts` and add:
+Open `stacks/primeagen/tasks/htop.ts` and add:
 
 ```typescript
-import { type TaskContext } from "../lib/mod.ts";
+import { type TaskContext } from "../../../src/lib/mod.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   // We'll add code here
@@ -28,7 +28,7 @@ export async function run(ctx: TaskContext): Promise<void> {
 ```
 
 This is the minimum structure:
-- Import `TaskContext` for the context parameter
+- Import `TaskContext` for the context parameter (note the relative path from the stack's tasks directory)
 - Export an async `run` function
 
 ## Step 3: Add the Installation
@@ -36,8 +36,8 @@ This is the minimum structure:
 Import the `apt` helper and use it:
 
 ```typescript
-import { type TaskContext } from "../lib/mod.ts";
-import { apt } from "../lib/shell.ts";
+import { type TaskContext } from "../../../src/lib/mod.ts";
+import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["htop"]);
@@ -54,7 +54,7 @@ The `apt` function:
 See what the task would do:
 
 ```bash
-deno task run htop --dry
+deno task run -s primeagen htop --dry
 ```
 
 Output:
@@ -69,7 +69,7 @@ Output:
 ## Step 5: Run for Real
 
 ```bash
-deno task run htop
+deno task run -s primeagen htop
 ```
 
 Output:
@@ -96,8 +96,8 @@ Press `q` to exit if you launched htop.
 Let's make the task verify itself. Update the file:
 
 ```typescript
-import { type TaskContext, verify as v } from "../lib/mod.ts";
-import { apt } from "../lib/shell.ts";
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
+import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["htop"]);
@@ -115,7 +115,7 @@ Now the task will automatically verify that `htop` is installed and working.
 Run it again (apt is idempotent, so it's safe):
 
 ```bash
-deno task run htop
+deno task run -s primeagen htop
 ```
 
 Output:
@@ -131,11 +131,11 @@ Notice the verification step ran after installation.
 
 ## The Complete Task
 
-Here's the final `src/tasks/htop.ts`:
+Here's the final `stacks/primeagen/tasks/htop.ts`:
 
 ```typescript
-import { type TaskContext, verify as v } from "../lib/mod.ts";
-import { apt } from "../lib/shell.ts";
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
+import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["htop"]);
@@ -151,8 +151,8 @@ export async function verify(ctx: TaskContext): Promise<void> {
 Let's expand the task to install related monitoring tools:
 
 ```typescript
-import { type TaskContext, verify as v } from "../lib/mod.ts";
-import { apt } from "../lib/shell.ts";
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
+import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, [
@@ -175,8 +175,8 @@ export async function verify(ctx: TaskContext): Promise<void> {
 Let's add a Rust-based alternative. Since we need Rust installed first, we declare a dependency:
 
 ```typescript
-import { type TaskContext, verify as v } from "../lib/mod.ts";
-import { apt, cargoInstall } from "../lib/shell.ts";
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
+import { apt, cargoInstall } from "../../../src/lib/shell.ts";
 
 // Declare that this task requires rust to be installed first
 export const dependsOn = ["rust"];
@@ -195,11 +195,11 @@ export async function verify(ctx: TaskContext): Promise<void> {
 }
 ```
 
-Now running `deno task run htop` will automatically run `rust` first if needed.
+Now running `deno task run -s primeagen htop` will automatically run `rust` first if needed.
 
 ## Understanding What We Did
 
-1. **Created a file** in `src/tasks/` — this auto-discovers the task
+1. **Created a file** in `stacks/<stack>/tasks/` — this auto-discovers the task
 2. **Exported run()** — the main function that does the work
 3. **Used apt()** — a helper that handles dry run and sudo
 4. **Exported verify()** — optional function to confirm success
@@ -214,6 +214,8 @@ Every function receives `ctx` with:
 - `ctx.home` — user's home directory
 - `ctx.configHome` — XDG config directory (~/.config)
 - `ctx.devEnv` — path to this repository
+- `ctx.stack` — active stack name
+- `ctx.stackRoot` — path to active stack directory
 
 ### Dependencies
 

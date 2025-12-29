@@ -1,12 +1,12 @@
 # Task Discovery
 
-Tasks are automatically discovered from the `src/tasks/` directory. Drop a TypeScript file there, and it becomes runnable.
+Tasks are automatically discovered from each stack's `tasks/` directory. Drop a TypeScript file there, and it becomes runnable.
 
 ## How Discovery Works
 
 The `discoverTasks()` function in `src/commands/run.ts`:
 
-1. Reads all files in `src/tasks/`
+1. Reads all files in `stacks/<stack>/tasks/`
 2. Filters for `.ts` files (excluding `.test.ts`)
 3. Dynamically imports each module
 4. Looks for a `run` export (function)
@@ -46,9 +46,9 @@ The filename becomes the task name:
 
 | File | Task Name |
 |------|-----------|
-| `src/tasks/rust.ts` | `rust` |
-| `src/tasks/neovim.ts` | `neovim` |
-| `src/tasks/docker.ts` | `docker` |
+| `stacks/primeagen/tasks/rust.ts` | `rust` |
+| `stacks/primeagen/tasks/neovim.ts` | `neovim` |
+| `stacks/primeagen/tasks/docker.ts` | `docker` |
 
 ## Filtering
 
@@ -56,7 +56,7 @@ Run specific tasks by providing a filter:
 
 ```bash
 # Run only tasks containing "neo"
-deno task run neo
+deno task run -s primeagen neo
 
 # Matches: neovim
 # Does not match: rust, docker, etc.
@@ -81,21 +81,21 @@ Tasks are sorted topologically based on their dependencies:
 
 ```typescript
 // Example: secrets depends on sops
-// src/tasks/secrets.ts
+// stacks/primeagen/tasks/secrets.ts
 export const dependsOn = ["sops"];
 ```
 
 When running a specific task, its dependencies are automatically included:
 
 ```bash
-deno task run secrets  # Automatically runs: sops → secrets
+deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 ```
 
 This provides deterministic execution while respecting dependency constraints.
 
-## Current Tasks
+## Current Tasks (primeagen stack)
 
-As of writing, the following tasks exist:
+As of writing, the following tasks exist in the primeagen stack:
 
 | Task | Purpose |
 |------|---------|
@@ -138,13 +138,13 @@ With discovery:
 
 ```bash
 # Adding a new task is just creating a file
-touch src/tasks/mytool.ts
+touch stacks/primeagen/tasks/mytool.ts
 ```
 
 ### Convention Over Configuration
 
 The discovery pattern follows a simple convention:
-- File in `src/tasks/`
+- File in `stacks/<stack>/tasks/`
 - Exports `run(ctx: TaskContext): Promise<void>`
 - Optionally exports `verify(ctx: TaskContext): Promise<void>`
 - Optionally exports `dependsOn: string[]` for task dependencies
@@ -156,7 +156,7 @@ No configuration files, no manifest updates, no imports to add.
 Want to see what gets installed? List the directory:
 
 ```bash
-ls src/tasks/
+ls stacks/primeagen/tasks/
 ```
 
 Each file is self-contained and readable.

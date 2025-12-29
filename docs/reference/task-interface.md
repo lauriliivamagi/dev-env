@@ -32,6 +32,8 @@ export interface TaskContext {
   devEnv: string;
   home: string;
   configHome: string;
+  stack: string;
+  stackRoot: string;
 }
 ```
 
@@ -43,25 +45,29 @@ export interface TaskContext {
 | `devEnv` | `string` | Absolute path to dev-env repository |
 | `home` | `string` | User's home directory (`$HOME`) |
 | `configHome` | `string` | XDG config directory (`$XDG_CONFIG_HOME` or `~/.config`) |
+| `stack` | `string` | Active stack name (e.g., "primeagen", "larr") |
+| `stackRoot` | `string` | Absolute path to active stack directory |
 
 ### Getting Context
 
 ```typescript
 import { getContext } from "./lib/mod.ts";
 
-const ctx = getContext({ dryRun: false });
+const ctx = getContext({ dryRun: false, stack: "primeagen" });
 // ctx.home = "/home/username"
 // ctx.devEnv = "/path/to/dev-env"
 // ctx.configHome = "/home/username/.config"
+// ctx.stack = "primeagen"
+// ctx.stackRoot = "/path/to/dev-env/stacks/primeagen"
 ```
 
 ## Task File Structure
 
-A task file in `src/tasks/` must export a `run` function:
+A task file in `stacks/<stack>/tasks/` must export a `run` function:
 
 ```typescript
-// src/tasks/example.ts
-import { type TaskContext } from "../lib/mod.ts";
+// stacks/primeagen/tasks/example.ts
+import { type TaskContext } from "../../../src/lib/mod.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   // Task implementation
@@ -71,8 +77,8 @@ export async function run(ctx: TaskContext): Promise<void> {
 ### With Verification
 
 ```typescript
-// src/tasks/example.ts
-import { type TaskContext, verify as v } from "../lib/mod.ts";
+// stacks/primeagen/tasks/example.ts
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   // Task implementation
@@ -88,8 +94,8 @@ export async function verify(ctx: TaskContext): Promise<void> {
 Declare dependencies using the `dependsOn` export:
 
 ```typescript
-// src/tasks/secrets.ts
-import { type TaskContext } from "../lib/mod.ts";
+// stacks/primeagen/tasks/secrets.ts
+import { type TaskContext } from "../../../src/lib/mod.ts";
 
 // Declare that this task depends on the sops task
 export const dependsOn = ["sops"];
@@ -113,7 +119,7 @@ When running a specific task, its dependencies are automatically included:
 
 ```bash
 # Running just 'secrets' will automatically run 'sops' first
-deno task run secrets
+deno task run -s primeagen secrets
 # Output:
 # === sops ===
 # Installing age...
@@ -125,9 +131,9 @@ deno task run secrets
 ## Complete Example
 
 ```typescript
-// src/tasks/rust.ts
-import { type TaskContext, verify as v } from "../lib/mod.ts";
-import { cargoInstall, curlPipe } from "../lib/shell.ts";
+// stacks/primeagen/tasks/rust.ts
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
+import { cargoInstall, curlPipe } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   // Install Rust via rustup
@@ -167,7 +173,10 @@ Note: Built-in utilities like `apt()` and `runOrFail()` handle dry run automatic
 export async function run(ctx: TaskContext): Promise<void> {
   const configDir = `${ctx.configHome}/mytool`;
   const binDir = `${ctx.home}/.local/bin`;
-  const srcDir = `${ctx.devEnv}/env/.config/mytool`;
+
+  // Use stackRoot for stack-specific resources
+  const srcDir = `${ctx.stackRoot}/env/.config/mytool`;
+  const resourceDir = `${ctx.stackRoot}/resources`;
 
   await fs.copyDir(ctx, srcDir, configDir);
 }
@@ -176,18 +185,21 @@ export async function run(ctx: TaskContext): Promise<void> {
 ### Expand Paths
 
 ```typescript
-import { expandPath } from "../lib/config.ts";
+import { expandPath } from "../../../src/lib/config.ts";
 
 const path = expandPath("~/.config/nvim", ctx);
 // Returns: "/home/username/.config/nvim"
 
 const path2 = expandPath("$DEV_ENV/env", ctx);
 // Returns: "/path/to/dev-env/env"
+
+const path3 = expandPath("$STACK_ROOT/resources", ctx);
+// Returns: "/path/to/dev-env/stacks/primeagen/resources"
 ```
 
 ## Task Discovery
 
-Tasks are discovered by scanning `src/tasks/`:
+Tasks are discovered by scanning `stacks/<stack>/tasks/`:
 
 1. File must end with `.ts` (not `.test.ts`)
 2. File must export `run` function
@@ -197,7 +209,6 @@ Tasks are discovered by scanning `src/tasks/`:
 // From src/commands/run.ts
 export async function discoverTasks(
   tasksDir: string,
-  filter?: string,
 ): Promise<Task[]> {
   // ...
   for await (const entry of Deno.readDir(tasksDir)) {
@@ -217,6 +228,7 @@ export async function discoverTasks(
       name: taskName,
       run: mod.run,
       verify: typeof mod.verify === "function" ? mod.verify : undefined,
+      dependsOn: Array.isArray(mod.dependsOn) ? mod.dependsOn : [],
     });
   }
   // ...

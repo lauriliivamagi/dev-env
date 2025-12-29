@@ -1,12 +1,14 @@
 .PHONY: build test test-dry test-docker test-sync shell clean
 
 IMAGE := dev-env-test
+STACK ?= primeagen
 
 # Build the test Docker image
 build:
 	docker build -t $(IMAGE) -f Dockerfile.test .
 
 # Test a specific task: make test TASK=zsh
+# Optionally specify stack: make test TASK=zsh STACK=larr
 test: build
 ifndef TASK
 	@echo "Usage: make test TASK=<task_name>"
@@ -19,7 +21,7 @@ endif
 		-e XDG_CONFIG_HOME=/home/testuser/.config \
 		-e DEV_ENV=/home/testuser/dev-env \
 		$(IMAGE) \
-		sh -c "sudo apt-get update -qq && deno task run $(TASK)"
+		sh -c "sudo apt-get update -qq && deno task run -s $(STACK) $(TASK)"
 
 # Run all tasks in dry-run mode
 test-dry: build
@@ -27,7 +29,7 @@ test-dry: build
 		-e HOME=/home/testuser \
 		-e USER=testuser \
 		$(IMAGE) \
-		deno task run --dry
+		deno task run -s $(STACK) --dry
 
 # Test the docker task (requires privileged mode)
 test-docker: build
@@ -37,7 +39,7 @@ test-docker: build
 		-e HOME=/home/testuser \
 		-e USER=testuser \
 		$(IMAGE) \
-		sh -c "sudo apt-get update -qq && deno task run docker"
+		sh -c "sudo apt-get update -qq && deno task run -s $(STACK) docker"
 
 # Test the sync command
 test-sync: build
@@ -45,7 +47,7 @@ test-sync: build
 		-e HOME=/home/testuser \
 		-e USER=testuser \
 		$(IMAGE) \
-		deno task sync
+		deno task sync -s $(STACK)
 
 # Run all tasks (full integration test)
 test-all: build
@@ -55,7 +57,7 @@ test-all: build
 		-e HOME=/home/testuser \
 		-e USER=testuser \
 		$(IMAGE) \
-		sh -c "sudo apt-get update -qq && deno task run"
+		sh -c "sudo apt-get update -qq && deno task run -s $(STACK)"
 
 # Open interactive shell for debugging
 shell: build

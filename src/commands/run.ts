@@ -48,9 +48,9 @@ export async function discoverTasks(tasksDir: string): Promise<Task[]> {
 }
 
 export async function runTasks(ctx: TaskContext, filter?: string): Promise<void> {
-  assert(ctx.devEnv.length > 0, "ctx.devEnv cannot be empty");
+  assert(ctx.stackRoot.length > 0, "ctx.stackRoot cannot be empty");
 
-  const tasksDir = join(ctx.devEnv, "src", "tasks");
+  const tasksDir = join(ctx.stackRoot, "tasks");
 
   // Discover all tasks (need full graph for dependency resolution)
   const allTasks = await discoverTasks(tasksDir);

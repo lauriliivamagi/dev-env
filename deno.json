@@ -1,11 +1,12 @@
 {
   "tasks": {
-    "serve": "deno run --allow-net --allow-read src/main.ts",
     "run": "deno run --allow-all src/cli.ts run",
     "sync": "deno run --allow-all src/cli.ts sync",
+    "run:primeagen": "deno run --allow-all src/cli.ts run --stack primeagen",
+    "sync:primeagen": "deno run --allow-all src/cli.ts sync --stack primeagen",
     "compile": "deno compile --allow-all -o dev-env src/cli.ts",
-    "check": "deno check src/**/*.ts",
-    "lint": "deno lint src/",
+    "check": "deno check src/**/*.ts stacks/**/*.ts",
+    "lint": "deno lint src/ stacks/",
     "test": "deno test --allow-all src/",
     "test:task": "deno test --allow-all --filter"
   },

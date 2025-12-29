@@ -38,13 +38,23 @@ cd dev-env
 
 ## Step 3: Explore What's Available
 
-See what tasks exist:
+This project uses **stacks** — isolated sets of tasks and configs. See what stacks exist:
 
 ```bash
-ls src/tasks/
+ls stacks/
 ```
 
-You'll see files like:
+You'll see directories like:
+```
+primeagen/    # ThePrimeagen-inspired setup
+```
+
+Each stack has its own tasks:
+
+```bash
+ls stacks/primeagen/tasks/
+```
+
 ```
 dev.ts      ghostty.ts  libs.ts     node.ts     rust.ts     zsh.ts
 docker.ts   i3.ts       neovim.ts   rofi.ts     tmux.ts     ...
@@ -57,7 +67,7 @@ Each file is a task that installs or configures something.
 Before making changes, preview what would happen:
 
 ```bash
-deno task run --dry
+deno task run -s primeagen --dry
 ```
 
 This shows every command that would run without executing them:
@@ -78,7 +88,7 @@ This shows every command that would run without executing them:
 Start with something simple. The `libs` task installs basic system packages:
 
 ```bash
-deno task run libs
+deno task run -s primeagen libs
 ```
 
 You'll see output like:
@@ -107,21 +117,21 @@ fzf --version
 When you're ready to set up your full environment:
 
 ```bash
-deno task run
+deno task run -s primeagen
 ```
 
-This runs all tasks alphabetically. It may take a while depending on what's being installed.
+This runs all tasks in dependency order. It may take a while depending on what's being installed.
 
 ## Step 8: Sync Your Configs
 
 After tasks install tools, sync your configuration files:
 
 ```bash
-deno task sync --dry    # Preview first
-deno task sync          # Apply
+deno task sync -s primeagen --dry    # Preview first
+deno task sync -s primeagen          # Apply
 ```
 
-This copies dotfiles and configs from `env/` to your home directory.
+This copies dotfiles and configs from `stacks/primeagen/env/` to your home directory.
 
 ## What Just Happened?
 
@@ -136,33 +146,38 @@ Your development environment is now reproducible. On a new machine:
 ```bash
 git clone <repo>
 cd dev-env
-deno task run
-deno task sync
+deno task run -s primeagen
+deno task sync -s primeagen
 ```
 
 ## Next Steps
 
-- **Customize**: Edit files in `env/` and run `deno task sync`
-- **Add tasks**: Create new files in `src/tasks/` for your tools
+- **Customize**: Edit files in `stacks/primeagen/env/` and run `deno task sync -s primeagen`
+- **Add tasks**: Create new files in `stacks/primeagen/tasks/` for your tools
+- **Create your own stack**: `mkdir -p stacks/mystack/{tasks,env,resources,secrets}`
 - **Understand**: Read the [Explanation docs](../explanation/) for design rationale
 
 ## Quick Reference
 
 ```bash
-# Run all tasks
-deno task run
+# Run all tasks for a stack
+deno task run -s primeagen
 
 # Run specific task
-deno task run neovim
+deno task run -s primeagen neovim
 
 # Preview changes
-deno task run --dry
+deno task run -s primeagen --dry
 
 # Sync configs
-deno task sync
+deno task sync -s primeagen
 
 # Preview sync
-deno task sync --dry
+deno task sync -s primeagen --dry
+
+# Convenience shortcuts (if configured)
+deno task run:primeagen
+deno task sync:primeagen
 
 # Type check
 deno task check

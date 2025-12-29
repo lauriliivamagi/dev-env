@@ -5,69 +5,89 @@ Reference for the dev-env command line interface.
 ## Usage
 
 ```bash
-deno task <command> [filter] [options]
+deno task <command> --stack <name> [filter] [options]
 ```
 
 ## Commands
 
 ### run
 
-Execute setup tasks from `src/tasks/`.
+Execute setup tasks from a stack's `tasks/` directory.
 
 ```bash
-# Run all tasks
-deno task run
+# Run all tasks for a stack
+deno task run -s primeagen
+deno task run --stack primeagen
 
 # Run tasks matching a filter
-deno task run neovim    # Only tasks containing "neovim"
-deno task run rust      # Only tasks containing "rust"
+deno task run -s primeagen neovim    # Only tasks containing "neovim"
+deno task run -s primeagen rust      # Only tasks containing "rust"
 
 # Dry run (preview without executing)
-deno task run --dry
-deno task run -d
+deno task run -s primeagen --dry
+deno task run -s primeagen -d
 
 # Combined
-deno task run neovim --dry
+deno task run -s primeagen neovim --dry
+
+# Convenience shortcuts (if configured)
+deno task run:primeagen
+deno task run:primeagen neovim --dry
 ```
 
 **Behavior:**
-- Discovers all `.ts` files in `src/tasks/`
+- Discovers all `.ts` files in `stacks/<name>/tasks/`
 - Filters by substring match if filter provided
-- Executes tasks in alphabetical order
+- Resolves dependencies (topological sort)
+- Executes tasks in dependency order, then alphabetically
 - Runs verification after each task (unless dry run)
 - Stops on first failure
 
 ### sync
 
-Synchronize configuration files from `env/` to the home directory.
+Synchronize configuration files from a stack's `env/` to the home directory.
 
 ```bash
-# Sync all configs
-deno task sync
+# Sync all configs for a stack
+deno task sync -s primeagen
+deno task sync --stack primeagen
 
 # Dry run
-deno task sync --dry
-deno task sync -d
+deno task sync -s primeagen --dry
+deno task sync -s primeagen -d
+
+# Convenience shortcuts (if configured)
+deno task sync:primeagen
 ```
 
 **What gets synced:**
-- `env/.config/*` → `~/.config/`
-- `env/.local/*` → `~/.local/`
-- `env/.zshrc` → `~/.zshrc`
-- `env/.zsh_profile` → `~/.zsh_profile`
-- `env/.xprofile` → `~/.xprofile`
-- `env/.tmux-sessionizer` → `~/.tmux-sessionizer`
+- `stacks/<name>/env/.config/*` → `~/.config/`
+- `stacks/<name>/env/.local/*` → `~/.local/`
+- `stacks/<name>/env/.zshrc` → `~/.zshrc`
+- `stacks/<name>/env/.zsh_profile` → `~/.zsh_profile`
+- `stacks/<name>/env/.xprofile` → `~/.xprofile`
+- `stacks/<name>/env/.tmux-sessionizer` → `~/.tmux-sessionizer`
 
 ## Options
+
+### -s, --stack
+
+**Required.** Specify which stack to use.
+
+```bash
+deno task run -s primeagen
+deno task run --stack larr
+deno task sync -s primeagen
+```
 
 ### -d, --dry
 
 Enable dry run mode. Shows what would happen without making changes.
 
 ```bash
-deno task run --dry
-deno task run -d
-deno task sync --dry
+deno task run -s primeagen --dry
+deno task run -s primeagen -d
+deno task sync -s primeagen --dry
 ```
 
 **Output in dry run:**
@@ -126,19 +146,23 @@ XDG_CONFIG_HOME=/custom/config deno task sync
 
 ```bash
 # Full setup on new machine
-deno task run
+deno task run -s primeagen
 
 # Just install Rust toolchain
-deno task run rust
+deno task run -s primeagen rust
 
 # Preview what neovim task does
-deno task run neovim --dry
+deno task run -s primeagen neovim --dry
 
 # Update all configs without running tasks
-deno task sync
+deno task sync -s primeagen
 
 # Check what sync would change
-deno task sync --dry
+deno task sync -s primeagen --dry
+
+# Run a different stack
+deno task run -s larr
+deno task sync -s larr
 ```
 
 ## Deno Tasks
@@ -150,8 +174,10 @@ The CLI is exposed through `deno.json` tasks:
   "tasks": {
     "run": "deno run -A src/cli.ts run",
     "sync": "deno run -A src/cli.ts sync",
-    "check": "deno check src/**/*.ts",
-    "lint": "deno lint",
+    "run:primeagen": "deno run -A src/cli.ts run --stack primeagen",
+    "sync:primeagen": "deno run -A src/cli.ts sync --stack primeagen",
+    "check": "deno check src/**/*.ts stacks/**/*.ts",
+    "lint": "deno lint src/ stacks/",
     "compile": "deno compile -A -o dev-env src/cli.ts"
   }
 }
@@ -169,4 +195,17 @@ deno task lint
 # Compile to standalone binary
 deno task compile
 # Creates ./dev-env executable
+```
+
+### Adding Convenience Tasks for New Stacks
+
+Add shortcuts for your custom stacks in `deno.json`:
+
+```json
+{
+  "tasks": {
+    "run:mystack": "deno run -A src/cli.ts run --stack mystack",
+    "sync:mystack": "deno run -A src/cli.ts sync --stack mystack"
+  }
+}
 ```

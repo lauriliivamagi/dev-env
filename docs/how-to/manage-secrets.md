@@ -18,7 +18,7 @@ Both tools encrypt secrets so they can be safely committed to git.
 Install the encryption and protection tools:
 
 ```bash
-deno task run sops dotenvx gitleaks git-hooks
+deno task run -s primeagen sops dotenvx gitleaks git-hooks
 ```
 
 This installs:
@@ -114,7 +114,7 @@ echo 'DOTENV_PRIVATE_KEY="..."' > .env.keys
 
 4. **Create the secrets file:**
    ```bash
-   cp secrets/ssh.enc.yaml.example secrets/ssh.enc.yaml
+   cp stacks/primeagen/secrets/ssh.enc.yaml.example stacks/primeagen/secrets/ssh.enc.yaml
    ```
 
 5. **Add your SSH keys** (edit the file):
@@ -130,19 +130,19 @@ echo 'DOTENV_PRIVATE_KEY="..."' > .env.keys
 
 6. **Encrypt the file:**
    ```bash
-   sops -e -i secrets/ssh.enc.yaml
+   sops -e -i stacks/primeagen/secrets/ssh.enc.yaml
    ```
 
 7. **Commit the encrypted file:**
    ```bash
-   git add secrets/ssh.enc.yaml
+   git add stacks/primeagen/secrets/ssh.enc.yaml
    git commit -m "Add encrypted SSH keys"
    ```
 
 ### Installing SSH Keys
 
 ```bash
-deno task run secrets
+deno task run -s primeagen secrets
 ```
 
 This decrypts the keys and installs them to `~/.ssh/` with correct permissions:
@@ -153,10 +153,10 @@ This decrypts the keys and installs them to `~/.ssh/` with correct permissions:
 
 ```bash
 # Opens decrypted in $EDITOR, re-encrypts on save
-sops secrets/ssh.enc.yaml
+sops stacks/primeagen/secrets/ssh.enc.yaml
 
 # Re-install after editing
-deno task run secrets
+deno task run -s primeagen secrets
 ```
 
 ### Adding a New SSH Key
@@ -164,7 +164,7 @@ deno task run secrets
 Edit the encrypted file:
 
 ```bash
-sops secrets/ssh.enc.yaml
+sops stacks/primeagen/secrets/ssh.enc.yaml
 ```
 
 Add the new key:
@@ -184,7 +184,7 @@ ssh_keys:
 Save and re-install:
 
 ```bash
-deno task run secrets
+deno task run -s primeagen secrets
 ```
 
 ### Sharing the age Private Key
@@ -205,7 +205,7 @@ git clone <repo-url>
 cd dev-env
 
 # 2. Install tools
-deno task run sops dotenvx
+deno task run -s primeagen sops dotenvx
 
 # 3. Set up age key (get from secure channel)
 mkdir -p ~/.config/sops/age
@@ -215,7 +215,7 @@ echo "AGE-SECRET-KEY-1..." > ~/.config/sops/age/keys.txt
 echo 'DOTENV_PRIVATE_KEY="..."' > .env.keys
 
 # 5. Install SSH keys
-deno task run secrets
+deno task run -s primeagen secrets
 
 # 6. Source your profile (or open new terminal)
 source ~/.zsh_profile
@@ -250,7 +250,7 @@ A pre-commit hook scans for secrets before each commit:
 
 ```bash
 # Install gitleaks and the hook
-deno task run gitleaks git-hooks
+deno task run -s primeagen gitleaks git-hooks
 ```
 
 The hook runs `gitleaks protect --staged` to scan staged files. If secrets are detected:
@@ -313,7 +313,7 @@ cat ~/.config/sops/age/keys.txt
 Re-run the secrets task:
 
 ```bash
-deno task run secrets
+deno task run -s primeagen secrets
 ```
 
 Or fix manually:

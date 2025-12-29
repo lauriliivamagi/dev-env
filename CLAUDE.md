@@ -5,13 +5,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-deno task check          # Type check all TypeScript files
-deno task lint           # Lint source code
-deno task test           # Run all tests
-deno task test:task      # Run specific task tests (e.g., deno task test:task rust)
-deno task run [filter]   # Run setup tasks (optional filter by name)
-deno task sync           # Sync configs from env/ to home directory
-deno task compile        # Compile to standalone binary
+deno task check                    # Type check all TypeScript files
+deno task lint                     # Lint source code
+deno task test                     # Run all tests
+deno task test:task                # Run specific task tests (e.g., deno task test:task rust)
+deno task run -s <stack> [filter]  # Run setup tasks for a stack
+deno task sync -s <stack>          # Sync configs from stack's env/ to home directory
+deno task compile                  # Compile to standalone binary
+
+# Convenience shortcuts for primeagen stack
+deno task run:primeagen [filter]   # Run primeagen stack tasks
+deno task sync:primeagen           # Sync primeagen stack configs
 ```
 
 Add `--dry` or `-d` to `run`/`sync` for dry-run mode.
@@ -19,31 +23,58 @@ Add `--dry` or `-d` to `run`/`sync` for dry-run mode.
 ### Docker Testing
 
 ```bash
-make test-all            # Run all tasks in Docker (full integration test)
-make test TASK=zsh       # Test a specific task in Docker
-make test-dry            # Dry-run all tasks in Docker
-make shell               # Open interactive shell for debugging
-make clean               # Remove test Docker image
+make test-all                      # Run all primeagen tasks in Docker (full integration test)
+make test TASK=zsh                 # Test a specific task in Docker
+make test-dry                      # Dry-run all tasks in Docker
+make test STACK=larr               # Test a different stack
+make shell                         # Open interactive shell for debugging
+make clean                         # Remove test Docker image
 ```
 
 ## Architecture
 
-This is a Deno-based development environment manager with two main commands:
+This is a Deno-based development environment manager organized around **stacks** - isolated sets of tasks and configurations.
 
-**`run`** - Discovers and executes task modules from `src/tasks/`. Each task is a TypeScript file exporting:
+### Stacks
+
+A stack is a complete, isolated dev environment configuration. Each stack has its own:
+- `tasks/` - Setup task modules
+- `env/` - Configuration files to sync
+- `resources/` - Static resources (fonts, scripts, etc.)
+- `secrets/` - Encrypted secrets (SSH keys, etc.)
+
+```
+stacks/
+├── primeagen/           # ThePrimeagen-inspired stack
+│   ├── tasks/
+│   ├── env/
+│   ├── resources/
+│   └── secrets/
+└── larr/                # Your custom stack
+    ├── tasks/
+    ├── env/
+    ├── resources/
+    └── secrets/
+```
+
+Stacks are fully isolated - no sharing between them.
+
+### Commands
+
+**`run --stack <name>`** - Discovers and executes task modules from `stacks/<name>/tasks/`. Each task is a TypeScript file exporting:
 ```typescript
 export async function run(ctx: TaskContext): Promise<void>
 ```
 
-**`sync`** - Copies configuration files from `env/` to the user's home directory (`~/.config/`, `~/.local/`, dotfiles).
+**`sync --stack <name>`** - Copies configuration files from `stacks/<name>/env/` to the user's home directory (`~/.config/`, `~/.local/`, dotfiles).
 
 ### Key Files
 - `src/cli.ts` - CLI entry point, argument parsing
 - `src/commands/run.ts` - Task discovery and execution
 - `src/commands/sync.ts` - Configuration synchronization
 - `src/lib/` - Shared utilities (shell, fs, logging, config, assert)
-- `src/tasks/` - Individual setup tasks (auto-discovered)
-- `env/` - Configuration files to sync to home
+- `stacks/<name>/tasks/` - Stack-specific setup tasks (auto-discovered)
+- `stacks/<name>/env/` - Stack-specific configuration files
 
 ### TaskContext
 All operations receive a `TaskContext` with:
@@ -51,6 +82,8 @@ All operations receive a `TaskContext` with:
 - `home: string` - User's home directory
 - `devEnv: string` - Path to this repository
 - `configHome: string` - XDG config home (~/.config)
+- `stack: string` - Active stack name
+- `stackRoot: string` - Path to active stack directory
 
 ## Tiger Style Assertions
 
@@ -71,25 +104,28 @@ Use assertions for:
 
 ## Adding a New Task
 
-Create `src/tasks/mytask.ts`:
+Create `stacks/<stack>/tasks/mytask.ts`:
 ```typescript
-import { type TaskContext, assert, log } from "../lib/mod.ts";
-import { apt, runOrFail } from "../lib/shell.ts";
+import { type TaskContext, assert, log } from "../../../src/lib/mod.ts";
+import { apt, runOrFail } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   // Shell utilities: apt(), pnpm(), cargoInstall(), gitClone(), curlPipe()
   // File utilities: fs.copyFile(), fs.copyDir(), fs.mkdir(), fs.remove(), fs.writeFile()
   // All lib functions handle ctx.dryRun internally
+
+  // Access stack-specific resources:
+  // const resourcePath = join(ctx.stackRoot, "resources", "myresource");
 }
 ```
 
-The task will be automatically discovered and can be run with `deno task run mytask`.
+The task will be automatically discovered and can be run with `deno task run -s <stack> mytask`.
 
 ### Task Dependencies
 
 Declare dependencies using the `dependsOn` export:
 ```typescript
-// src/tasks/secrets.ts
+// stacks/primeagen/tasks/secrets.ts
 export const dependsOn = ["sops"];  // This task requires sops to run first
 
 export async function run(ctx: TaskContext): Promise<void> {
@@ -99,10 +135,22 @@ export async function run(ctx: TaskContext): Promise<void> {
 
 When running a specific task, its dependencies are automatically included:
 ```bash
-deno task run secrets  # Automatically runs: sops → secrets
+deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 ```
 
 Tasks are sorted topologically (dependencies first), with alphabetical ordering for independent tasks. Circular dependencies are detected and cause an error.
+
+## Creating a New Stack
+
+```bash
+mkdir -p stacks/mystack/{tasks,env,resources,secrets}
+```
+
+Add tasks to `stacks/mystack/tasks/`, configs to `stacks/mystack/env/`, etc. Then run:
+```bash
+deno task run -s mystack
+deno task sync -s mystack
+```
 
 ## Secrets Management
 
@@ -115,7 +163,7 @@ This project uses two tools for secrets:
 
 ```bash
 # 1. Install tools and pre-commit hook
-deno task run sops dotenvx gitleaks git-hooks
+deno task run -s primeagen sops dotenvx gitleaks git-hooks
 
 # 2. Generate age keypair (first time only, share public key)
 age-keygen -o ~/.config/sops/age/keys.txt
@@ -128,12 +176,12 @@ cp .env.example .env
 # Edit .env with your API keys
 dotenvx encrypt
 
-cp secrets/ssh.enc.yaml.example secrets/ssh.enc.yaml
-# Edit secrets/ssh.enc.yaml with your SSH keys
-sops -e -i secrets/ssh.enc.yaml
+cp stacks/primeagen/secrets/ssh.enc.yaml.example stacks/primeagen/secrets/ssh.enc.yaml
+# Edit secrets file with your SSH keys
+sops -e -i stacks/primeagen/secrets/ssh.enc.yaml
 
 # 5. Install SSH keys
-deno task run secrets
+deno task run -s primeagen secrets
 ```
 
 ### Daily Workflow
@@ -146,8 +194,8 @@ To update secrets:
 dotenvx set NEW_API_KEY "value"
 
 # Edit SSH keys
-sops secrets/ssh.enc.yaml  # Opens decrypted in $EDITOR
-deno task run secrets       # Re-install keys
+sops stacks/primeagen/secrets/ssh.enc.yaml  # Opens decrypted in $EDITOR
+deno task run -s primeagen secrets           # Re-install keys
 ```
 
 ### Sharing Secrets

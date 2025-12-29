@@ -4,11 +4,11 @@ import { type TaskContext, assert, fs, log } from "../lib/mod.ts";
 import { runOrFail } from "../lib/shell.ts";
 
 export async function syncConfigs(ctx: TaskContext): Promise<void> {
-  assert(ctx.devEnv.length > 0, "ctx.devEnv cannot be empty");
+  assert(ctx.stackRoot.length > 0, "ctx.stackRoot cannot be empty");
   assert(ctx.home.length > 0, "ctx.home cannot be empty");
   assert(ctx.configHome.length > 0, "ctx.configHome cannot be empty");
 
-  const envDir = join(ctx.devEnv, "env");
+  const envDir = join(ctx.stackRoot, "env");
 
   log.task("Syncing .config");
   await fs.syncConfigDir(
@@ -46,28 +46,7 @@ export async function syncConfigs(ctx: TaskContext): Promise<void> {
     }
   }
 
-  log.task("Syncing scripts");
-  await fs.mkdir(ctx, join(ctx.home, ".local", "scripts"));
-
-  const scripts = [
-    { src: "tmux-sessionizer/tmux-sessionizer", dest: ".local/scripts/tmux-sessionizer" },
-  ];
-
-  for (const { src, dest } of scripts) {
-    const srcPath = join(ctx.devEnv, src);
-    const destPath = join(ctx.home, dest);
-    try {
-      await fs.copyFile(ctx, srcPath, destPath);
-    } catch (err) {
-      if (err instanceof Deno.errors.NotFound) {
-        log.warn(`Script not found: ${src}`);
-      } else {
-        throw err;
-      }
-    }
-  }
-
-  // Build daydream if it exists
+  // Build daydream if it exists (shared tool at repo root)
   const daydreamDir = join(ctx.devEnv, "daydream");
   if (await exists(daydreamDir)) {
     log.task("Building daydream");

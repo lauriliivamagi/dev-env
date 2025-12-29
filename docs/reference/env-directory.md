@@ -1,13 +1,13 @@
 # env/ Directory Structure
 
-Reference for the configuration files in the `env/` directory and how they sync to the home directory.
+Reference for the configuration files in the stack's `env/` directory and how they sync to the home directory.
 
 ## Overview
 
-The `env/` directory contains configuration files that get synchronized to the user's home directory via `deno task sync`.
+Each stack has an `env/` directory containing configuration files that get synchronized to the user's home directory via `deno task sync -s <stack>`.
 
 ```
-env/
+stacks/<stack>/env/
 ├── .config/          # XDG config directory contents
 │   ├── ghostty/      # Terminal emulator config
 │   ├── i3/           # i3 window manager config
@@ -28,12 +28,12 @@ env/
 
 | Source | Destination |
 |--------|-------------|
-| `env/.config/*` | `~/.config/` (or `$XDG_CONFIG_HOME`) |
-| `env/.local/*` | `~/.local/` |
-| `env/.zshrc` | `~/.zshrc` |
-| `env/.zsh_profile` | `~/.zsh_profile` |
-| `env/.xprofile` | `~/.xprofile` |
-| `env/.tmux-sessionizer` | `~/.tmux-sessionizer` |
+| `stacks/<stack>/env/.config/*` | `~/.config/` (or `$XDG_CONFIG_HOME`) |
+| `stacks/<stack>/env/.local/*` | `~/.local/` |
+| `stacks/<stack>/env/.zshrc` | `~/.zshrc` |
+| `stacks/<stack>/env/.zsh_profile` | `~/.zsh_profile` |
+| `stacks/<stack>/env/.xprofile` | `~/.xprofile` |
+| `stacks/<stack>/env/.tmux-sessionizer` | `~/.tmux-sessionizer` |
 
 ## .config/ Directory
 
@@ -233,6 +233,7 @@ The `sync` command (`src/commands/sync.ts`):
 
 1. **Syncs .config directories:**
    ```typescript
+   const envDir = join(ctx.stackRoot, "env");
    await fs.syncConfigDir(
      ctx,
      join(envDir, ".config"),
@@ -263,13 +264,7 @@ The `sync` command (`src/commands/sync.ts`):
    }
    ```
 
-4. **Syncs scripts:**
-   ```typescript
-   await fs.mkdir(ctx, join(ctx.home, ".local", "scripts"));
-   // Copy scripts...
-   ```
-
-5. **Reloads window manager (if available):**
+4. **Reloads window manager (if available):**
    ```typescript
    await runOrFail(ctx, ["hyprctl", "reload"]);
    ```
@@ -278,28 +273,28 @@ The `sync` command (`src/commands/sync.ts`):
 
 ### Add to .config/
 
-1. Create directory in `env/.config/`:
+1. Create directory in your stack's `env/.config/`:
    ```bash
-   mkdir -p env/.config/newtool
+   mkdir -p stacks/primeagen/env/.config/newtool
    ```
 
 2. Add configuration files:
    ```bash
-   cp ~/.config/newtool/config.toml env/.config/newtool/
+   cp ~/.config/newtool/config.toml stacks/primeagen/env/.config/newtool/
    ```
 
 3. Run sync:
    ```bash
-   deno task sync
+   deno task sync -s primeagen
    ```
 
 The directory will be synced automatically—`syncConfigDir` iterates all subdirectories.
 
 ### Add a Dotfile
 
-1. Add file to `env/`:
+1. Add file to your stack's `env/`:
    ```bash
-   cp ~/.mytoolrc env/.mytoolrc
+   cp ~/.mytoolrc stacks/primeagen/env/.mytoolrc
    ```
 
 2. Update sync command in `src/commands/sync.ts`:
@@ -315,7 +310,7 @@ The directory will be synced automatically—`syncConfigDir` iterates all subdir
 
 3. Run sync:
    ```bash
-   deno task sync
+   deno task sync -s primeagen
    ```
 
 ## Dry Run Preview
@@ -323,18 +318,18 @@ The directory will be synced automatically—`syncConfigDir` iterates all subdir
 Preview what would be synced:
 
 ```bash
-deno task sync --dry
+deno task sync -s primeagen --dry
 ```
 
 Output:
 ```
 [TASK] Syncing .config
-[DRY] sync env/.config -> ~/.config
+[DRY] sync stacks/primeagen/env/.config -> ~/.config
 [TASK] Syncing .local
-[DRY] sync env/.local -> ~/.local
+[DRY] sync stacks/primeagen/env/.local -> ~/.local
 [TASK] Syncing dotfiles
-[INFO] Copy env/.zshrc -> ~/.zshrc
-[DRY] cp env/.zshrc -> ~/.zshrc
+[INFO] Copy stacks/primeagen/env/.zshrc -> ~/.zshrc
+[DRY] cp stacks/primeagen/env/.zshrc -> ~/.zshrc
 ...
 ```
 
@@ -344,7 +339,7 @@ Output:
 
 `syncConfigDir` removes existing destination directories before copying. If you have local changes in `~/.config/nvim/`, they will be lost.
 
-**Workflow:** Make changes in `env/`, then sync. Never edit synced files directly in `~/.config/`.
+**Workflow:** Make changes in your stack's `env/`, then sync. Never edit synced files directly in `~/.config/`.
 
 ### Missing Files
 

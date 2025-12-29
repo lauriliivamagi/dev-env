@@ -5,7 +5,8 @@ import { syncConfigs } from "./commands/sync.ts";
 
 const args = parseArgs(Deno.args, {
   boolean: ["dry", "help"],
-  alias: { d: "dry", h: "help" },
+  string: ["stack"],
+  alias: { d: "dry", h: "help", s: "stack" },
 });
 
 const command = args._[0] as string | undefined;
@@ -16,19 +17,20 @@ function showHelp(): void {
 dev-env - Development environment manager
 
 USAGE:
-  deno task run [filter] [--dry]    Run setup tasks
-  deno task sync [--dry]            Sync configs to home directory
+  deno task run --stack <name> [filter] [--dry]    Run setup tasks
+  deno task sync --stack <name> [--dry]            Sync configs to home directory
 
 OPTIONS:
+  -s, --stack   Stack name (required)
   -d, --dry     Dry run mode (show what would be done)
   -h, --help    Show this help message
 
 EXAMPLES:
-  deno task run                 # Run all tasks
-  deno task run neovim          # Run only tasks matching 'neovim'
-  deno task run --dry           # Dry run all tasks
-  deno task sync                # Sync configs
-  deno task sync --dry          # Dry run sync
+  deno task run -s primeagen              # Run all tasks in primeagen stack
+  deno task run -s primeagen neovim       # Run only tasks matching 'neovim'
+  deno task run -s primeagen --dry        # Dry run all tasks
+  deno task sync -s primeagen             # Sync configs
+  deno task sync -s primeagen --dry       # Dry run sync
 `);
 }
 
@@ -38,7 +40,7 @@ if (args.help || !command) {
 }
 
 try {
-  const ctx = getContext({ dryRun: args.dry });
+  const ctx = getContext({ dryRun: args.dry, stack: args.stack });
 
   if (args.dry) {
     log.info("Dry run mode enabled");

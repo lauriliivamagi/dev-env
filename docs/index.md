@@ -5,15 +5,19 @@ A Deno-based development environment manager. Clone the repo, run one command, a
 ## Quick Start
 
 ```bash
-# Run all setup tasks
-deno task run
+# Run all setup tasks for a stack
+deno task run -s primeagen
 
 # Sync configuration files to home directory
-deno task sync
+deno task sync -s primeagen
 
 # Dry run (preview changes without executing)
-deno task run --dry
-deno task sync --dry
+deno task run -s primeagen --dry
+deno task sync -s primeagen --dry
+
+# Convenience shortcuts (if configured in deno.json)
+deno task run:primeagen
+deno task sync:primeagen
 ```
 
 ## Documentation
@@ -77,27 +81,46 @@ src/
     fs.ts             # File system utilities
     shell.ts          # Shell command utilities
     verify.ts         # Verification utilities
-  tasks/              # Setup tasks (auto-discovered)
-    volta.ts          # Installs Volta, Node LTS, pnpm
-    node.ts           # Installs Deno and Bun
-    rust.ts           # Installs Rust toolchain
-    neovim.ts         # Builds Neovim from source
-    sops.ts           # Installs SOPS + age for secrets
-    dotenvx.ts        # Installs dotenvx for API tokens
-    secrets.ts        # Decrypts and installs SSH keys
-    ...
 
-env/                  # Configuration files to sync
-  .config/            # -> ~/.config
-  .local/             # -> ~/.local
-  .zshrc              # -> ~/.zshrc
-  ...
-
-secrets/              # Encrypted secrets (SOPS + age)
-  ssh.enc.yaml        # SSH keys (encrypted)
+stacks/               # Isolated environment configurations
+  primeagen/          # ThePrimeagen-inspired stack
+    tasks/            # Setup tasks (auto-discovered)
+      volta.ts        # Installs Volta, Node LTS, pnpm
+      node.ts         # Installs Deno and Bun
+      rust.ts         # Installs Rust toolchain
+      neovim.ts       # Builds Neovim from source
+      sops.ts         # Installs SOPS + age for secrets
+      dotenvx.ts      # Installs dotenvx for API tokens
+      secrets.ts      # Decrypts and installs SSH keys
+      ...
+    env/              # Configuration files to sync
+      .config/        # -> ~/.config
+      .local/         # -> ~/.local
+      .zshrc          # -> ~/.zshrc
+      ...
+    resources/        # Static resources (fonts, scripts)
+    secrets/          # Encrypted secrets (SOPS + age)
+      ssh.enc.yaml    # SSH keys (encrypted)
+  larr/               # Your custom stack (create your own!)
+    tasks/
+    env/
+    resources/
+    secrets/
 
 .env                  # API tokens (encrypted with dotenvx)
 .sops.yaml            # SOPS configuration
+```
+
+## Stacks
+
+A **stack** is a complete, isolated dev environment configuration. Each stack has its own tasks, configs, resources, and secrets. Stacks don't share anything with each other.
+
+```bash
+# Create a new stack
+mkdir -p stacks/mystack/{tasks,env,resources,secrets}
+
+# Run your stack
+deno task run -s mystack
 ```
 
 ## Philosophy
