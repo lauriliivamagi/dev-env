@@ -13,8 +13,8 @@ And when you need to set up a second machine? You do it all over again, forgetti
 Clone this repo. Run one command. Done. *(Ubuntu only)*
 
 ```bash
-git clone <repo-url> ~/dev-env
-cd ~/dev-env
+git clone <repo-url> ~/git/dev-env
+cd ~/git/dev-env
 
 # Install all tools for your stack
 deno task run -s larr     # or: deno task run -s primeagen

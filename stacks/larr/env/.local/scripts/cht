@@ -1,0 +1,3 @@
+#!/bin/bash
+# Quick cht.sh wrapper: cht js/array cht go/goroutine
+curl -s "cht.sh/$1"

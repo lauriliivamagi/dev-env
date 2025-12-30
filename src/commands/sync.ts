@@ -23,22 +23,26 @@ async function maybeBackup(ctx: TaskContext, path: string): Promise<void> {
   }
 }
 
+interface DotEntry {
+  name: string;
+  isDirectory: boolean;
+}
+
 /**
- * Discover dotfiles in the env directory.
- * A dotfile is any file starting with . that is not .config or .local.
+ * Discover dotfiles and dot-directories in the env directory.
+ * A dotfile/dotdir is any entry starting with . that is not .config or .local.
  */
-async function discoverDotfiles(envDir: string): Promise<string[]> {
-  const dotfiles: string[] = [];
+async function discoverDotEntries(envDir: string): Promise<DotEntry[]> {
+  const entries: DotEntry[] = [];
 
   try {
     for await (const entry of Deno.readDir(envDir)) {
       if (
-        entry.isFile &&
         entry.name.startsWith(".") &&
         entry.name !== ".config" &&
         entry.name !== ".local"
       ) {
-        dotfiles.push(entry.name);
+        entries.push({ name: entry.name, isDirectory: entry.isDirectory });
       }
     }
   } catch (err) {
@@ -47,7 +51,7 @@ async function discoverDotfiles(envDir: string): Promise<string[]> {
     }
   }
 
-  return dotfiles.sort();
+  return entries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function syncConfigs(ctx: TaskContext): Promise<void> {
@@ -72,19 +76,24 @@ export async function syncConfigs(ctx: TaskContext): Promise<void> {
   );
 
   log.task("Syncing dotfiles");
-  // Dynamically discover dotfiles instead of hardcoding
-  const dotfiles = await discoverDotfiles(envDir);
-  log.info(`Found ${dotfiles.length} dotfile(s): ${dotfiles.join(", ")}`);
+  // Dynamically discover dotfiles and dot-directories
+  const dotEntries = await discoverDotEntries(envDir);
+  const names = dotEntries.map((e) => e.name);
+  log.info(`Found ${dotEntries.length} dotfile(s): ${names.join(", ")}`);
 
-  for (const dotfile of dotfiles) {
-    const src = join(envDir, dotfile);
-    const dest = join(ctx.home, dotfile);
+  for (const entry of dotEntries) {
+    const src = join(envDir, entry.name);
+    const dest = join(ctx.home, entry.name);
     try {
-      await maybeBackup(ctx, dest);
-      await fs.copyFile(ctx, src, dest);
+      if (entry.isDirectory) {
+        await fs.copyDir(ctx, src, dest);
+      } else {
+        await maybeBackup(ctx, dest);
+        await fs.copyFile(ctx, src, dest);
+      }
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {
-        log.warn(`Dotfile not found: ${dotfile}`);
+        log.warn(`Dotfile not found: ${entry.name}`);
       } else {
         throw err;
       }

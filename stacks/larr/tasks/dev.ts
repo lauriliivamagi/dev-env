@@ -1,7 +1,7 @@
 import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
-import { apt, aptUpdate, goInstall, pnpm } from "../../../src/lib/shell.ts";
+import { apt, aptUpdate, pnpm } from "../../../src/lib/shell.ts";
 
-export const dependsOn = ["volta", "go"];
+export const dependsOn = ["volta"];
 
 export async function run(ctx: TaskContext): Promise<void> {
   await aptUpdate(ctx);
@@ -21,11 +21,20 @@ export async function run(ctx: TaskContext): Promise<void> {
     "dc",
     "xclip",
     "jq",
+    "yq",
     "fonts-font-awesome",
+    "entr",
+    "tree",
+    "ncdu",
+    "duf",
+    "sqlite3",
+    "pandoc",
+    "graphviz",
+    "git-lfs",
+    "parallel",
   ]);
 
   await pnpm(ctx, ["add", "-g", "tldr"]);
-  await goInstall(ctx, "github.com/air-verse/air@latest");
 }
 
 export async function verify(_ctx: TaskContext): Promise<void> {
@@ -39,4 +48,14 @@ export async function verify(_ctx: TaskContext): Promise<void> {
   await v.assertFile("/usr/bin/mc");
   await v.assertCommand("xclip", "-version");
   await v.assertCommand("jq", "--version");
+  // entr returns exit code 1 when showing usage
+  await v.assertFile("/usr/bin/entr");
+  await v.assertCommand("tree", "--version");
+  await v.assertCommand("ncdu", "-v");
+  await v.assertCommand("duf", "--version");
+  await v.assertCommand("sqlite3", "--version");
+  await v.assertCommand("pandoc", "--version");
+  await v.assertCommand("dot", "-V"); // graphviz
+  await v.assertCommand("git-lfs", "--version");
+  await v.assertCommand("parallel", "--version");
 }

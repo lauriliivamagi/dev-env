@@ -14,13 +14,14 @@ export async function run(ctx: TaskContext): Promise<void> {
   log.info("Setting up pnpm global directory");
   const pnpmHome = `${ctx.home}/.local/share/pnpm`;
   const currentPath = Deno.env.get("PATH") ?? "";
-  await runOrFail(ctx, [`${ctx.home}/.volta/bin/pnpm`, "setup"], {
-    env: {
-      PNPM_HOME: pnpmHome,
-      PATH: `${pnpmHome}:${currentPath}`,
-      SHELL: "/bin/bash",
-    },
-  });
+  // In realistic test mode, use PATH as-is from shell config
+  // In normal mode, extend PATH with pnpm home
+  const env: Record<string, string> = {
+    PNPM_HOME: pnpmHome,
+    SHELL: "/bin/bash",
+    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}:${currentPath}`,
+  };
+  await runOrFail(ctx, [`${ctx.home}/.volta/bin/pnpm`, "setup"], { env });
 }
 
 export async function verify(ctx: TaskContext): Promise<void> {

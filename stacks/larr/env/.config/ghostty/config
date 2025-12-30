@@ -1,5 +1,6 @@
 theme = Subliminal
 window-decoration = true
 window-height = 30
+confirm-close-surface = false
 #background-opacity = 0.98
 #background-blur-radius = 20

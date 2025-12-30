@@ -26,8 +26,18 @@ export async function run(ctx: TaskContext): Promise<void> {
   await fs.mkdir(ctx, goPath);
   await fs.mkdir(ctx, join(goPath, "bin"));
 
+  // Add Go to PATH for current process so dependent tasks can use it
+  // Skip in realistic test mode - PATH should come from shell config
+  if (!Deno.env.get("REALISTIC_TEST")) {
+    const currentPath = Deno.env.get("PATH") || "";
+    const goBinPath = "/usr/local/go/bin";
+    const goPathBin = join(ctx.home, "go", "bin");
+    if (!currentPath.includes(goBinPath)) {
+      Deno.env.set("PATH", `${goBinPath}:${goPathBin}:${currentPath}`);
+    }
+  }
+
   log.success("Go installed");
-  log.info("Ensure /usr/local/go/bin and ~/go/bin are in your PATH");
 }
 
 export async function verify(ctx: TaskContext): Promise<void> {

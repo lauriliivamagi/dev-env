@@ -104,19 +104,26 @@ export async function assertCommandWithPath(
   await assertFile(binPath);
 
   // Build PATH with expected directories
-  const binDirs = [
-    `${home}/.local/bin`,
-    `${home}/.cargo/bin`,
-    `${home}/.deno/bin`,
-    `${home}/.bun/bin`,
-    `${home}/.volta/bin`,
-    `${home}/.local/share/pnpm`,
-    `${home}/.opencode/bin`,
-    `${home}/go/bin`,
-    "/usr/local/go/bin",
-  ];
+  // In realistic test mode, use PATH as-is from shell config
+  // In normal mode, extend PATH with all expected binary directories
   const currentPath = Deno.env.get("PATH") ?? "";
-  const extendedPath = [...binDirs, currentPath].join(":");
+  let path: string;
+  if (Deno.env.get("REALISTIC_TEST")) {
+    path = currentPath;
+  } else {
+    const binDirs = [
+      `${home}/.local/bin`,
+      `${home}/.cargo/bin`,
+      `${home}/.deno/bin`,
+      `${home}/.bun/bin`,
+      `${home}/.volta/bin`,
+      `${home}/.local/share/pnpm`,
+      `${home}/.opencode/bin`,
+      `${home}/go/bin`,
+      "/usr/local/go/bin",
+    ];
+    path = [...binDirs, currentPath].join(":");
+  }
 
   // Verify command is accessible and optionally runs successfully
   const cmdArgs = args.length > 0 ? args : [];
@@ -125,7 +132,7 @@ export async function assertCommandWithPath(
       args: cmdArgs,
       stdout: "null",
       stderr: "null",
-      env: { PATH: extendedPath },
+      env: { PATH: path },
     });
     const { code } = await command.output();
     assert(

@@ -1,0 +1,17 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+    echo "Usage: $0 <PID>"
+    exit 1
+fi
+PID=$1
+if ! ps -p "$PID" > /dev/null; then
+    echo "Error: Process with PID $PID does not exist."
+    exit 1
+fi
+VMRSS=$(grep VmRSS /proc/"$PID"/status | awk '{print $2}')
+if [ -z "$VMRSS" ]; then
+    echo "Error: Could not retrieve VmRSS for PID $PID."
+    exit 1
+fi
+VMRSS_MB=$(echo "scale=2; $VMRSS / 1024" | bc)
+echo "Process $PID VmRSS: $VMRSS kB ($VMRSS_MB MB)"

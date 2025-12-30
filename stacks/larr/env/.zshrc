@@ -11,6 +11,7 @@ fi
 setopt histignorealldups sharehistory
 
 export EDITOR=nvim
+export GIT_EDITOR=nvim
 
 # Keep 100000 lines of history within the shell and save it to ~/.zsh_history:
 HISTSIZE=100000
@@ -30,22 +31,29 @@ _comp_options+=(globdots) # include hidden files
 # Enable searching through history
 bindkey '^R' history-incremental-pattern-search-backward
 
+# Ctrl+F to launch tmux-sessionizer
+bindkey -s ^f "tmux-sessionizer\n"
+
+# fzf fuzzy finder
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 # Load aliases and shortcuts if exists
 [ -f "$HOME/.zsh/aliasrc" ] && source "$HOME/.zsh/aliasrc"
 
-source ~/.zsh/themes/powerlevel10k/powerlevel10k.zsh-theme
+[ -f ~/.zsh/themes/powerlevel10k/powerlevel10k.zsh-theme ] && source ~/.zsh/themes/powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # NPM completion
-source ~/.zsh/plugins/zsh-better-npm-completion/zsh-better-npm-completion.plugin.zsh
+[ -f ~/.zsh/plugins/zsh-better-npm-completion/zsh-better-npm-completion.plugin.zsh ] && source ~/.zsh/plugins/zsh-better-npm-completion/zsh-better-npm-completion.plugin.zsh
 
-# Cargo
-source "$HOME/.cargo/env"
+# Cargo (unconditional PATH for testing, source env if exists for extras)
+export PATH="$HOME/.cargo/bin:$PATH"
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
 # Fasd
-eval "$(fasd --init posix-alias zsh-hook)"
+command -v fasd &>/dev/null && eval "$(fasd --init posix-alias zsh-hook)"
 
 # Use lf to switch directories and bind it to ctrl-o
 lfcd () {
@@ -60,7 +68,7 @@ lfcd () {
 bindkey -s '^o' 'lfcd\n'
 
 # Load plugins
-source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+[ -f ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # deno
 export DENO_INSTALL="$HOME/.deno"
@@ -118,11 +126,11 @@ export EMBEDDING_MODEL="gemini/gemini-embedding-001"
 # User-level pyenv (overrides system pyenv)
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+command -v pyenv &>/dev/null && eval "$(pyenv init -)"
 
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
 
-# Local bin
-export PATH="$HOME/.local/bin:$PATH"
+# Local bin and scripts
+export PATH="$HOME/.local/bin:$HOME/.local/scripts:$PATH"
 export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"

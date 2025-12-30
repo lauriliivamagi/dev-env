@@ -16,8 +16,8 @@ export PATH="$HOME/.deno/bin:$PATH"
 
 ```bash
 # 1. Clone repo
-git clone https://github.com/lauriliivamagi/dev-env ~/dev-env
-cd ~/dev-env
+git clone https://github.com/lauriliivamagi/dev-env ~/git/dev-env
+cd ~/git/dev-env
 
 # 2. Run tasks for your stack
 deno task run -s larr

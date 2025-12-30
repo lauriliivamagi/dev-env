@@ -191,14 +191,15 @@ export async function pnpm(ctx: TaskContext, args: string[]): Promise<void> {
   }
 
   // Set PNPM_HOME and PATH for global installs to work
+  // In realistic test mode, use PATH as-is from shell config
+  // In normal mode, extend PATH with pnpm home
   const pnpmHome = `${ctx.home}/.local/share/pnpm`;
   const currentPath = Deno.env.get("PATH") ?? "";
-  await runOrFail(ctx, [pnpmCmd, ...args], {
-    env: {
-      PNPM_HOME: pnpmHome,
-      PATH: `${pnpmHome}:${currentPath}`,
-    },
-  });
+  const env: Record<string, string> = {
+    PNPM_HOME: pnpmHome,
+    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}:${currentPath}`,
+  };
+  await runOrFail(ctx, [pnpmCmd, ...args], { env });
 }
 
 export async function cargoInstall(

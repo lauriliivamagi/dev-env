@@ -29,3 +29,6 @@ alias t='task tui'
 
 # pnpm
 alias npm=pnpm
+
+# Vim
+alias vim="nvim"

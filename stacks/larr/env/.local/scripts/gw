@@ -1,0 +1,8 @@
+#!/bin/bash
+# git worktree add helper
+# Usage: gw feature-branch
+set -e
+branch="${1:?Usage: gw <branch-name>}"
+git worktree add "../${branch}" -b "${branch}" 2>/dev/null || \
+git worktree add "../${branch}" "${branch}"
+echo "Created worktree at ../${branch}"

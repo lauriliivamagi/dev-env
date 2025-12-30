@@ -1,4 +1,4 @@
-.PHONY: build test test-dry test-docker test-sync shell clean
+.PHONY: build test test-dry test-docker test-sync test-all test-full shell clean
 
 IMAGE := dev-env-test
 STACK ?= primeagen
@@ -68,6 +68,23 @@ shell: build
 		-e DEV_ENV=/home/testuser/dev-env \
 		$(IMAGE) \
 		/bin/bash
+
+# Full integration test: sync configs first, run tasks in zsh (realistic PATH)
+# Uses zsh -i -l to force interactive mode so .zshrc is fully sourced
+test-full: build
+	docker run -it --rm \
+		--privileged \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-e HOME=/home/testuser \
+		-e USER=testuser \
+		-e XDG_CONFIG_HOME=/home/testuser/.config \
+		-e DEV_ENV=/home/testuser/dev-env \
+		-e REALISTIC_TEST=1 \
+		$(IMAGE) \
+		sh -c "cp test/secrets/*.enc.yaml stacks/$(STACK)/secrets/ && \
+		       sudo apt-get update -qq && \
+		       deno task sync -s $(STACK) && \
+		       exec zsh -i -l -c 'deno task run -s $(STACK) $(TASK) && exec zsh -i -l'"
 
 # Remove the test image
 clean:

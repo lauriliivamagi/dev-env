@@ -1,6 +1,17 @@
 import { join } from "@std/path";
-import { type TaskContext, assert, fs, verify as v } from "../../../src/lib/mod.ts";
-import { apt, gitCheckout, gitClone, gitFetch, runOrFail } from "../../../src/lib/shell.ts";
+import {
+  type TaskContext,
+  assert,
+  fs,
+  verify as v,
+} from "../../../src/lib/mod.ts";
+import {
+  apt,
+  gitCheckout,
+  gitClone,
+  gitFetch,
+  runOrFail,
+} from "../../../src/lib/shell.ts";
 
 function extractRepoName(url: string): string {
   const parts = url.split("/");
@@ -12,16 +23,11 @@ function extractRepoName(url: string): string {
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["neovim", "lua5.1", "luarocks"]);
 
-  const personalDir = join(ctx.home, "personal");
+  const personalDir = join(ctx.home, "git");
   await fs.mkdir(ctx, personalDir);
 
   const repos = [
-    { url: "https://github.com/ThePrimeagen/harpoon.git", branch: "harpoon2" },
-    { url: "https://github.com/ThePrimeagen/vim-apm.git" },
-    { url: "https://github.com/ThePrimeagen/vim-with-me.git" },
-    { url: "https://github.com/ThePrimeagen/vim-arcade.git" },
-    { url: "https://github.com/ThePrimeagen/caleb.git" },
-    { url: "https://github.com/nvim-lua/plenary.nvim.git" },
+    { url: "https://github.com/lauriliivamagi/task.git", branch: "master" },
   ];
 
   for (const repo of repos) {
@@ -42,5 +48,5 @@ export async function run(ctx: TaskContext): Promise<void> {
 
 export async function verify(ctx: TaskContext): Promise<void> {
   await v.assertCommand("nvim", "--version");
-  await v.assertDir(join(ctx.home, "personal", "harpoon"));
+  await v.assertDir(join(ctx.home, "git", "task"));
 }
