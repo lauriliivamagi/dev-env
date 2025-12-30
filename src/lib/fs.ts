@@ -4,7 +4,23 @@ import { type TaskContext } from "./config.ts";
 import { assert } from "./assert.ts";
 import * as log from "./log.ts";
 
-const DANGEROUS_PATHS = ["/", "/home", "/usr", "/etc", "/var", "/tmp"];
+const DANGEROUS_PATHS = [
+  "/",
+  "/bin",
+  "/boot",
+  "/etc",
+  "/home",
+  "/lib",
+  "/lib64",
+  "/opt",
+  "/proc",
+  "/root",
+  "/sbin",
+  "/sys",
+  "/tmp",
+  "/usr",
+  "/var",
+];
 
 function assertSafePath(path: string, operation: string): void {
   assert(path.length > 0, `${operation} path cannot be empty`);
@@ -48,8 +64,14 @@ export async function copyDir(
     return;
   }
 
-  if (await exists(dest)) {
+  // Remove destination first to ensure clean copy (dest = exact mirror of src)
+  // Skip exists() check - just try to remove and handle NotFound
+  try {
     await Deno.remove(dest, { recursive: true });
+  } catch (err) {
+    if (!(err instanceof Deno.errors.NotFound)) {
+      throw err;
+    }
   }
 
   await copy(src, dest, { overwrite: true });

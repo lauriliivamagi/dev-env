@@ -1,4 +1,4 @@
-import { type TaskContext, log } from "../../../src/lib/mod.ts";
+import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
 import { curl, runOrFail } from "../../../src/lib/shell.ts";
 
 const EMOJI_VERSION = "1.0-beta.2";
@@ -21,4 +21,8 @@ export async function run(ctx: TaskContext): Promise<void> {
 
   log.info("Cleaning up");
   await runOrFail(ctx, ["rm", "-rf", tmpDir]);
+}
+
+export async function verify(_ctx: TaskContext): Promise<void> {
+  await v.assertCommand("emojicodec", "--version");
 }

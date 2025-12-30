@@ -5,7 +5,7 @@ import { cargoInstall, curlPipe } from "../../../src/lib/shell.ts";
 export const dependsOn = ["libs"];
 
 export async function run(ctx: TaskContext): Promise<void> {
-  await curlPipe(ctx, "https://sh.rustup.rs", "sh -s -- -y");
+  await curlPipe(ctx, "https://sh.rustup.rs", ["sh", "-s", "--", "-y"]);
 
   await cargoInstall(ctx, "stylua");
 }

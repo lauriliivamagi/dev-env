@@ -5,10 +5,10 @@ export const dependsOn = ["volta"];
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Deno");
-  await curlPipe(ctx, "https://deno.land/install.sh", "sh");
+  await curlPipe(ctx, "https://deno.land/install.sh", ["sh"]);
 
   log.info("Installing Bun");
-  await curlPipe(ctx, "https://bun.sh/install", "bash");
+  await curlPipe(ctx, "https://bun.sh/install", ["bash"]);
 }
 
 export async function verify(ctx: TaskContext): Promise<void> {

@@ -8,7 +8,7 @@ export async function run(ctx: TaskContext): Promise<void> {
   await curlPipe(
     ctx,
     "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh",
-    "sh",
+    ["sh"],
   );
 
   log.info("Setting zsh as default shell");

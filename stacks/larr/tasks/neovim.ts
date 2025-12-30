@@ -1,5 +1,5 @@
 import { join } from "@std/path";
-import { type TaskContext, assert, fs } from "../../../src/lib/mod.ts";
+import { type TaskContext, assert, fs, verify as v } from "../../../src/lib/mod.ts";
 import { apt, gitCheckout, gitClone, gitFetch, runOrFail } from "../../../src/lib/shell.ts";
 
 function extractRepoName(url: string): string {
@@ -38,4 +38,9 @@ export async function run(ctx: TaskContext): Promise<void> {
   }
 
   await runOrFail(ctx, ["sudo", "luarocks", "install", "luacheck"]);
+}
+
+export async function verify(ctx: TaskContext): Promise<void> {
+  await v.assertCommand("nvim", "--version");
+  await v.assertDir(join(ctx.home, "personal", "harpoon"));
 }

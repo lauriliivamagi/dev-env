@@ -1,6 +1,11 @@
-import { type TaskContext } from "../../../src/lib/mod.ts";
+import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
 import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["php", "php-cli", "php-common", "composer"]);
+}
+
+export async function verify(_ctx: TaskContext): Promise<void> {
+  await v.assertCommand("php", "--version");
+  await v.assertCommand("composer", "--version");
 }

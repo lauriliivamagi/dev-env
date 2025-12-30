@@ -9,7 +9,7 @@ export async function run(ctx: TaskContext): Promise<void> {
   await curlPipe(
     ctx,
     "https://gef.blah.cat/sh",
-    "bash",
+    ["bash"],
   );
 }
 

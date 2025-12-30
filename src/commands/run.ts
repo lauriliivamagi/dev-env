@@ -119,8 +119,8 @@ export async function runTasks(ctx: TaskContext, filter?: string): Promise<void>
       completed.add(name);
       log.success(`Completed: ${task.name}`);
     } catch (err) {
-      log.error(`Failed: ${task.name} - ${err}`);
-      throw err;
+      // Don't log here - let CLI handle error display to avoid duplicate logging
+      throw new Error(`Task '${task.name}' failed: ${err}`);
     }
   }
 }

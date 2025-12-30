@@ -120,14 +120,20 @@ export async function curl(
 export async function curlPipe(
   ctx: TaskContext,
   url: string,
-  shell: string = "sh",
+  shell: string[] = ["sh"],
 ): Promise<void> {
   assert(url.length > 0, "curlPipe url cannot be empty");
+  assert(shell.length > 0, "curlPipe shell array cannot be empty");
+  assert(
+    shell.every((arg) => typeof arg === "string" && arg.length > 0),
+    "all shell arguments must be non-empty strings",
+  );
 
-  log.cmd(["curl", "-fsSL", url, "|", shell]);
+  const shellDisplay = shell.join(" ");
+  log.cmd(["curl", "-fsSL", url, "|", shellDisplay]);
 
   if (ctx.dryRun) {
-    log.dryRun(`curl -fsSL ${url} | ${shell}`);
+    log.dryRun(`curl -fsSL ${url} | ${shellDisplay}`);
     return;
   }
 
@@ -148,9 +154,8 @@ export async function curlPipe(
     `curl returned empty response from ${url}`,
   );
 
-  const shellParts = shell.split(" ");
-  const shellCmd = shellParts[0]!;
-  const shellArgs = shellParts.slice(1);
+  const shellCmd = shell[0]!;
+  const shellArgs = shell.slice(1);
 
   const sh = new Deno.Command(shellCmd, {
     args: shellArgs,
@@ -164,7 +169,7 @@ export async function curlPipe(
 
   const shOutput = await shProcess.output();
   if (shOutput.code !== 0) {
-    throw new Error(`${shell} failed with code ${shOutput.code}`);
+    throw new Error(`${shellDisplay} failed with code ${shOutput.code}`);
   }
 }
 

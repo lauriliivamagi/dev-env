@@ -6,7 +6,7 @@ export const dependsOn = ["dev"];
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Rust via rustup");
-  await curlPipe(ctx, "https://sh.rustup.rs", "sh -s -- -y");
+  await curlPipe(ctx, "https://sh.rustup.rs", ["sh", "-s", "--", "-y"]);
   log.success("Rust installed");
 }
 

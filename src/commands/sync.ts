@@ -3,6 +3,53 @@ import { exists } from "@std/fs";
 import { type TaskContext, assert, fs, log } from "../lib/mod.ts";
 import { runOrFail } from "../lib/shell.ts";
 
+/**
+ * Create a backup of a file before overwriting.
+ * Only creates backup if SYNC_BACKUP=1 is set.
+ */
+async function maybeBackup(ctx: TaskContext, path: string): Promise<void> {
+  if (Deno.env.get("SYNC_BACKUP") !== "1") return;
+  if (ctx.dryRun) return;
+
+  try {
+    await Deno.stat(path);
+    const backupPath = `${path}.bak`;
+    await Deno.copyFile(path, backupPath);
+    log.debug(`Backed up ${path} -> ${backupPath}`);
+  } catch (err) {
+    if (!(err instanceof Deno.errors.NotFound)) {
+      throw err;
+    }
+  }
+}
+
+/**
+ * Discover dotfiles in the env directory.
+ * A dotfile is any file starting with . that is not .config or .local.
+ */
+async function discoverDotfiles(envDir: string): Promise<string[]> {
+  const dotfiles: string[] = [];
+
+  try {
+    for await (const entry of Deno.readDir(envDir)) {
+      if (
+        entry.isFile &&
+        entry.name.startsWith(".") &&
+        entry.name !== ".config" &&
+        entry.name !== ".local"
+      ) {
+        dotfiles.push(entry.name);
+      }
+    }
+  } catch (err) {
+    if (!(err instanceof Deno.errors.NotFound)) {
+      throw err;
+    }
+  }
+
+  return dotfiles.sort();
+}
+
 export async function syncConfigs(ctx: TaskContext): Promise<void> {
   assert(ctx.stackRoot.length > 0, "ctx.stackRoot cannot be empty");
   assert(ctx.home.length > 0, "ctx.home cannot be empty");
@@ -25,18 +72,15 @@ export async function syncConfigs(ctx: TaskContext): Promise<void> {
   );
 
   log.task("Syncing dotfiles");
-  const dotfiles = [
-    ".zshrc",
-    ".zsh_profile",
-    ".xprofile",
-    ".tmux-sessionizer",
-    ".p10k.zsh",
-  ];
+  // Dynamically discover dotfiles instead of hardcoding
+  const dotfiles = await discoverDotfiles(envDir);
+  log.info(`Found ${dotfiles.length} dotfile(s): ${dotfiles.join(", ")}`);
 
   for (const dotfile of dotfiles) {
     const src = join(envDir, dotfile);
     const dest = join(ctx.home, dotfile);
     try {
+      await maybeBackup(ctx, dest);
       await fs.copyFile(ctx, src, dest);
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {

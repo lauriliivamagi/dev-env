@@ -141,3 +141,28 @@ export async function assertCommandWithPath(
     throw err;
   }
 }
+
+/**
+ * Assert that passwordless sudo is available.
+ * Useful as a pre-flight check before tasks that require sudo.
+ * Throws if sudo requires a password or is not available.
+ */
+export async function assertSudoAccess(): Promise<void> {
+  try {
+    const command = new Deno.Command("sudo", {
+      args: ["-n", "true"],
+      stdout: "null",
+      stderr: "null",
+    });
+    const { code } = await command.output();
+    assert(
+      code === 0,
+      "Passwordless sudo is not available. Configure sudo to not require a password or run manually.",
+    );
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      throw new Error("sudo command not found");
+    }
+    throw err;
+  }
+}

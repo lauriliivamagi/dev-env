@@ -3,7 +3,7 @@ import { curlPipe } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Claude Code CLI");
-  await curlPipe(ctx, "https://claude.ai/install.sh", "bash");
+  await curlPipe(ctx, "https://claude.ai/install.sh", ["bash"]);
   log.success("Claude Code installed");
 }
 

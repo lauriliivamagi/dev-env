@@ -9,7 +9,7 @@ export async function run(ctx: TaskContext): Promise<void> {
   await curlPipe(
     ctx,
     "https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh",
-    "sudo bash",
+    ["sudo", "bash"],
   );
 }
 

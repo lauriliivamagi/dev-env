@@ -76,14 +76,15 @@ export async function runTaskInDocker(
   // Run apt update then the task
   args.push("sh", "-c", `sudo apt-get update -qq && deno task run ${taskName}`);
 
+  const abortController = new AbortController();
+  const timeout = options.timeout ?? 300000; // 5 minutes default
+
   const cmd = new Deno.Command("docker", {
     args,
     stdout: "piped",
     stderr: "piped",
+    signal: abortController.signal,
   });
-
-  const abortController = new AbortController();
-  const timeout = options.timeout ?? 300000; // 5 minutes default
 
   const timeoutId = setTimeout(() => {
     abortController.abort();

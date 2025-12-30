@@ -3,7 +3,7 @@ import { curlPipe } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing uv (Python package manager)");
-  await curlPipe(ctx, "https://astral.sh/uv/install.sh", "sh");
+  await curlPipe(ctx, "https://astral.sh/uv/install.sh", ["sh"]);
   log.success("uv installed");
 }
 

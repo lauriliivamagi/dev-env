@@ -90,6 +90,24 @@ Deno.test("curlPipe - throws on empty url", async () => {
   );
 });
 
+Deno.test("curlPipe - throws on empty shell array", async () => {
+  const ctx = createMockContext();
+  await assertRejects(
+    () => curlPipe(ctx, "https://example.com/script.sh", []),
+    Error,
+    "cannot be empty",
+  );
+});
+
+Deno.test("curlPipe - throws on shell with empty string argument", async () => {
+  const ctx = createMockContext();
+  await assertRejects(
+    () => curlPipe(ctx, "https://example.com/script.sh", ["sh", ""]),
+    Error,
+    "non-empty strings",
+  );
+});
+
 Deno.test("cargoInstall - throws on empty package name", async () => {
   const ctx = createMockContext();
   await assertRejects(

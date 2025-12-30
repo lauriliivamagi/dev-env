@@ -6,6 +6,51 @@ export interface TaskNode {
 }
 
 /**
+ * Find a cycle in a subset of tasks (for error reporting).
+ * Uses DFS to trace the cycle path.
+ */
+function findCycle(tasks: TaskNode[]): string[] {
+  const taskMap = new Map(tasks.map((t) => [t.name, t]));
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const path: string[] = [];
+
+  function dfs(name: string): string[] | null {
+    if (visited.has(name)) return null;
+    if (visiting.has(name)) {
+      // Found cycle - extract it from path
+      const cycleStart = path.indexOf(name);
+      return path.slice(cycleStart);
+    }
+
+    visiting.add(name);
+    path.push(name);
+
+    const task = taskMap.get(name);
+    if (task) {
+      for (const dep of task.dependsOn) {
+        if (taskMap.has(dep)) {
+          const cycle = dfs(dep);
+          if (cycle) return cycle;
+        }
+      }
+    }
+
+    path.pop();
+    visiting.delete(name);
+    visited.add(name);
+    return null;
+  }
+
+  for (const task of tasks) {
+    const cycle = dfs(task.name);
+    if (cycle) return cycle;
+  }
+
+  return tasks.map((t) => t.name); // Fallback
+}
+
+/**
  * Topologically sort tasks based on dependencies.
  * Uses Kahn's algorithm for cycle detection.
  * Tasks without dependencies maintain alphabetical order among themselves.
@@ -54,7 +99,11 @@ export function resolveDependencies(tasks: TaskNode[]): string[] {
   // Cycle detection
   if (result.length !== tasks.length) {
     const remaining = tasks.filter((t) => !result.includes(t.name)).map((t) => t.name);
-    throw new Error(`Circular dependency detected involving: ${remaining.join(", ")}`);
+    const cycle = findCycle(tasks.filter((t) => remaining.includes(t.name)));
+    throw new Error(
+      `Circular dependency detected: ${cycle.join(" -> ")} -> ${cycle[0]}\n` +
+        `Tasks involved: ${remaining.join(", ")}`,
+    );
   }
 
   return result;
