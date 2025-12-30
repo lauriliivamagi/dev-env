@@ -266,7 +266,7 @@ Deno.test("copyDir - copies entire directory", async () => {
   }
 });
 
-Deno.test("copyDir - overwrites existing destination", async () => {
+Deno.test("copyDir - merges into existing destination", async () => {
   const tmpDir = await Deno.makeTempDir();
   try {
     const ctx = createMockContext({ dryRun: false });
@@ -276,15 +276,24 @@ Deno.test("copyDir - overwrites existing destination", async () => {
     // Create source with new content
     await Deno.mkdir(srcDir);
     await Deno.writeTextFile(join(srcDir, "new.txt"), "new content");
+    await Deno.writeTextFile(join(srcDir, "shared.txt"), "updated content");
 
-    // Create dest with old content
+    // Create dest with existing content
     await Deno.mkdir(destDir);
-    await Deno.writeTextFile(join(destDir, "old.txt"), "old content");
+    await Deno.writeTextFile(join(destDir, "existing.txt"), "existing content");
+    await Deno.writeTextFile(join(destDir, "shared.txt"), "old content");
 
     await copyDir(ctx, srcDir, destDir);
 
+    // New files are added
     assertEquals(await exists(join(destDir, "new.txt")), true);
-    assertEquals(await exists(join(destDir, "old.txt")), false);
+    // Existing files are preserved
+    assertEquals(await exists(join(destDir, "existing.txt")), true);
+    // Shared files are overwritten with source content
+    assertEquals(
+      await Deno.readTextFile(join(destDir, "shared.txt")),
+      "updated content",
+    );
   } finally {
     await Deno.remove(tmpDir, { recursive: true });
   }

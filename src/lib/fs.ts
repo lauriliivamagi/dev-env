@@ -1,4 +1,4 @@
-import { copy, ensureDir, exists } from "@std/fs";
+import { ensureDir, exists } from "@std/fs";
 import { dirname, join } from "@std/path";
 import { type TaskContext } from "./config.ts";
 import { assert } from "./assert.ts";
@@ -28,6 +28,25 @@ function assertSafePath(path: string, operation: string): void {
     !DANGEROUS_PATHS.includes(path),
     `${operation} on dangerous path "${path}" is not allowed`,
   );
+}
+
+/**
+ * Recursively merge source directory into destination.
+ * Only overwrites files that exist in source, preserves other files in dest.
+ */
+async function mergeDir(src: string, dest: string): Promise<void> {
+  await ensureDir(dest);
+
+  for await (const entry of Deno.readDir(src)) {
+    const srcPath = join(src, entry.name);
+    const destPath = join(dest, entry.name);
+
+    if (entry.isDirectory) {
+      await mergeDir(srcPath, destPath);
+    } else {
+      await Deno.copyFile(srcPath, destPath);
+    }
+  }
 }
 
 export async function copyFile(
@@ -64,17 +83,8 @@ export async function copyDir(
     return;
   }
 
-  // Remove destination first to ensure clean copy (dest = exact mirror of src)
-  // Skip exists() check - just try to remove and handle NotFound
-  try {
-    await Deno.remove(dest, { recursive: true });
-  } catch (err) {
-    if (!(err instanceof Deno.errors.NotFound)) {
-      throw err;
-    }
-  }
-
-  await copy(src, dest, { overwrite: true });
+  // Merge instead of replace - preserves existing files in dest
+  await mergeDir(src, dest);
 }
 
 export async function remove(
@@ -147,11 +157,8 @@ export async function syncConfigDir(
       const src = join(srcBase, entry.name);
       const dest = join(destBase, entry.name);
 
-      if (await exists(dest)) {
-        await Deno.remove(dest, { recursive: true });
-      }
-
-      await copy(src, dest, { overwrite: true });
+      // Merge instead of replace - preserves existing files in dest
+      await mergeDir(src, dest);
       log.success(`Synced ${entry.name}`);
     }
   }
