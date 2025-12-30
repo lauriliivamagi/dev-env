@@ -66,7 +66,7 @@ async function installConfig(ctx: TaskContext): Promise<void> {
 
   if (result.code !== 0) {
     throw new Error(
-      `Failed to decrypt espanso secrets: ${result.stderr ?? "unknown error"}`,
+      `Failed to decrypt espanso secrets (exit code ${result.code}). Check age key and SOPS config.`,
     );
   }
 
