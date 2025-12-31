@@ -6,6 +6,8 @@ export interface Task {
   name: string;
   run: (ctx: TaskContext) => Promise<void>;
   verify?: (ctx: TaskContext) => Promise<void>;
+  /** Optional pre-check to skip task if already satisfied */
+  shouldRun?: (ctx: TaskContext) => Promise<boolean>;
   dependsOn: string[];
 }
 
@@ -40,6 +42,7 @@ export async function discoverTasks(tasksDir: string): Promise<Task[]> {
       name: taskName,
       run: mod.run,
       verify: typeof mod.verify === "function" ? mod.verify : undefined,
+      shouldRun: typeof mod.shouldRun === "function" ? mod.shouldRun : undefined,
       dependsOn,
     });
   }
@@ -108,6 +111,22 @@ export async function runTasks(ctx: TaskContext, filter?: string): Promise<void>
     assert(typeof task.run === "function", `Task '${task.name}' has invalid run`);
 
     log.task(task.name);
+
+    // Check if task should be skipped (already satisfied)
+    if (task.shouldRun) {
+      const should = await task.shouldRun(ctx);
+      if (!should) {
+        // Still run verify() to ensure task is actually satisfied
+        if (!ctx.dryRun && task.verify) {
+          log.info(`Verifying skipped task: ${task.name}`);
+          await task.verify(ctx);
+        }
+        log.skip(`${task.name} (already satisfied)`);
+        completed.add(name);
+        continue;
+      }
+    }
+
     try {
       await task.run(ctx);
 

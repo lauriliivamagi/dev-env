@@ -64,6 +64,12 @@ export function dryRun(msg: string): void {
   }
 }
 
+export function skip(msg: string): void {
+  if (shouldLog("info")) {
+    console.log(dim("SKIP"), msg);
+  }
+}
+
 export function task(name: string): void {
   if (shouldLog("info")) {
     console.log(bold(cyan(`\n=== ${name} ===`)));

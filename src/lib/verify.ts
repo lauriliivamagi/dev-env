@@ -174,3 +174,24 @@ export async function assertSudoAccess(): Promise<void> {
     throw err;
   }
 }
+
+/**
+ * Run a check function and return true if all assertions pass, false otherwise.
+ * Useful for reusing verify() functions as skip checks in shouldRun().
+ *
+ * @example
+ * export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+ *   // If verify would pass, skip the task
+ *   return !(await checkSatisfied(() => verify(ctx)));
+ * }
+ */
+export async function checkSatisfied(
+  check: () => Promise<void>,
+): Promise<boolean> {
+  try {
+    await check();
+    return true;
+  } catch {
+    return false;
+  }
+}

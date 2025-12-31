@@ -64,6 +64,45 @@ export async function runOrFail(
   }
 }
 
+/**
+ * Check command output for state inspection (version checks, existence checks, etc.).
+ * This function explicitly bypasses dry-run mode because it's checking actual system state,
+ * not performing modifications. Use this in shouldRun() functions to determine if a task
+ * should execute.
+ */
+export async function checkCommandOutput(
+  cmd: string[],
+  opts: Omit<RunOptions, "stdin"> = {},
+): Promise<{ code: number; stdout?: string; stderr?: string }> {
+  assert(cmd.length > 0, "command array cannot be empty");
+  assert(
+    cmd.every((arg) => typeof arg === "string" && arg.length > 0),
+    "all command arguments must be non-empty strings",
+  );
+
+  const executable = cmd[0]!;
+  const command = new Deno.Command(executable, {
+    args: cmd.slice(1),
+    cwd: opts.cwd,
+    env: opts.env,
+    stdin: "null",
+    stdout: opts.stdout ?? "piped",
+    stderr: opts.stderr ?? "piped",
+  });
+
+  const result = await command.output();
+
+  return {
+    code: result.code,
+    stdout: opts.stdout === "piped" || opts.stdout === undefined
+      ? new TextDecoder().decode(result.stdout)
+      : undefined,
+    stderr: opts.stderr === "piped" || opts.stderr === undefined
+      ? new TextDecoder().decode(result.stderr)
+      : undefined,
+  };
+}
+
 export async function apt(ctx: TaskContext, packages: string[]): Promise<void> {
   assert(packages.length > 0, "packages array cannot be empty");
   await runOrFail(ctx, [
@@ -97,6 +136,54 @@ export async function gitClone(
   await runOrFail(ctx, cmd);
 }
 
+/**
+ * Idempotent git clone - pulls if repo exists, clones if not.
+ * If destination exists but is not a git repo, removes it and clones fresh.
+ * If a branch is specified, ensures that branch is checked out after both clone and pull.
+ * Returns { cloned: true } if freshly cloned, { cloned: false } if pulled.
+ */
+export async function gitCloneOrPull(
+  ctx: TaskContext,
+  url: string,
+  dest: string,
+  opts: { branch?: string } = {},
+): Promise<{ cloned: boolean }> {
+  assert(url.length > 0, "git clone url cannot be empty");
+  assert(dest.length > 0, "git clone destination cannot be empty");
+
+  if (!ctx.dryRun) {
+    try {
+      const stat = await Deno.stat(dest);
+      if (stat.isDirectory) {
+        const gitDir = `${dest}/.git`;
+        try {
+          const gitStat = await Deno.stat(gitDir);
+          if (gitStat.isDirectory) {
+            // Repo exists - ensure correct branch and pull
+            log.info(`Repository exists at ${dest}, updating...`);
+            if (opts.branch) {
+              await runOrFail(ctx, ["git", "-C", dest, "fetch"]);
+              await runOrFail(ctx, ["git", "-C", dest, "checkout", opts.branch]);
+            }
+            await runOrFail(ctx, ["git", "-C", dest, "pull"]);
+            return { cloned: false };
+          }
+        } catch {
+          // .git doesn't exist - remove and clone fresh
+          log.info(`${dest} exists but is not a git repo, removing...`);
+        }
+        // Remove directory (either not a git repo or .git check failed)
+        await Deno.remove(dest, { recursive: true });
+      }
+    } catch {
+      // Destination doesn't exist - proceed with clone
+    }
+  }
+
+  await gitClone(ctx, url, dest, opts);
+  return { cloned: true };
+}
+
 export async function gitFetch(ctx: TaskContext, cwd: string): Promise<void> {
   await runOrFail(ctx, ["git", "fetch"], { cwd });
 }
@@ -124,11 +211,17 @@ export async function curl(
   await runOrFail(ctx, ["curl", "-fsSL", "-o", dest, url]);
 }
 
+export interface CurlPipeOptions {
+  /** Skip execution if this command already exists in PATH */
+  skipIfCommand?: string;
+}
+
 export async function curlPipe(
   ctx: TaskContext,
   url: string,
   shell: string[] = ["sh"],
-): Promise<void> {
+  opts: CurlPipeOptions = {},
+): Promise<{ skipped: boolean }> {
   assert(url.length > 0, "curlPipe url cannot be empty");
   assert(shell.length > 0, "curlPipe shell array cannot be empty");
   assert(
@@ -136,12 +229,27 @@ export async function curlPipe(
     "all shell arguments must be non-empty strings",
   );
 
+  // Check if we should skip because command already exists
+  // Check even in dry-run mode to accurately reflect what would happen
+  if (opts.skipIfCommand) {
+    // Use a non-dry-run context to actually check if command exists
+    const checkCtx = { ...ctx, dryRun: false };
+    const which = await run(checkCtx, ["which", opts.skipIfCommand], {
+      stdout: "piped",
+      stderr: "piped",
+    });
+    if (which.code === 0) {
+      log.skip(`${opts.skipIfCommand} already installed`);
+      return { skipped: true };
+    }
+  }
+
   const shellDisplay = shell.join(" ");
   log.cmd(["curl", "-fsSL", url, "|", shellDisplay]);
 
   if (ctx.dryRun) {
     log.dryRun(`curl -fsSL ${url} | ${shellDisplay}`);
-    return;
+    return { skipped: false };
   }
 
   const curl = new Deno.Command("curl", {
@@ -178,6 +286,8 @@ export async function curlPipe(
   if (shOutput.code !== 0) {
     throw new Error(`${shellDisplay} failed with code ${shOutput.code}`);
   }
+
+  return { skipped: false };
 }
 
 export async function pnpm(ctx: TaskContext, args: string[]): Promise<void> {

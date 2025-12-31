@@ -3,7 +3,7 @@ import { curlPipe, runOrFail } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Volta");
-  await curlPipe(ctx, "https://get.volta.sh", ["bash"]);
+  await curlPipe(ctx, "https://get.volta.sh", ["bash"], { skipIfCommand: "volta" });
 
   log.info("Installing Node.js LTS via Volta");
   await runOrFail(ctx, [`${ctx.home}/.volta/bin/volta`, "install", "node@lts"]);

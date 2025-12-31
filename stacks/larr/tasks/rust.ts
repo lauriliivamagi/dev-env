@@ -6,8 +6,12 @@ export const dependsOn = ["build-deps"];
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Rust via rustup");
-  await curlPipe(ctx, "https://sh.rustup.rs", ["sh", "-s", "--", "-y"]);
-  log.success("Rust installed");
+  const { skipped } = await curlPipe(ctx, "https://sh.rustup.rs", ["sh", "-s", "--", "-y"], {
+    skipIfCommand: "rustc",
+  });
+  if (!skipped) {
+    log.success("Rust installed");
+  }
 }
 
 export async function verify(ctx: TaskContext): Promise<void> {

@@ -7,9 +7,7 @@ import {
 } from "../../../src/lib/mod.ts";
 import {
   apt,
-  gitCheckout,
-  gitClone,
-  gitFetch,
+  gitCloneOrPull,
   runOrFail,
 } from "../../../src/lib/shell.ts";
 
@@ -34,13 +32,8 @@ export async function run(ctx: TaskContext): Promise<void> {
     const name = extractRepoName(repo.url);
     const dest = join(personalDir, name);
 
-    await fs.remove(ctx, dest);
-    await gitClone(ctx, repo.url, dest);
-
-    if (repo.branch) {
-      await gitFetch(ctx, dest);
-      await gitCheckout(ctx, repo.branch, dest);
-    }
+    // gitCloneOrPull handles branch checkout on both clone and pull
+    await gitCloneOrPull(ctx, repo.url, dest, { branch: repo.branch });
   }
 
   await runOrFail(ctx, ["sudo", "luarocks", "install", "luacheck"]);
