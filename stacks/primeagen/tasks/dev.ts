@@ -22,8 +22,13 @@ export async function run(ctx: TaskContext): Promise<void> {
   await goInstall(ctx, "github.com/air-verse/air@latest");
 }
 
-export async function verify(_ctx: TaskContext): Promise<void> {
+export async function verify(ctx: TaskContext): Promise<void> {
   await v.assertCommand("git", "--version");
   await v.assertCommand("fzf", "--version");
-  await v.assertCommand("tldr", "--version");
+  await v.assertCommandWithPath(
+    ctx.home,
+    "tldr",
+    `${ctx.home}/.local/share/pnpm/tldr`,
+    "--version",
+  );
 }

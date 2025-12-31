@@ -1,8 +1,8 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
 import { curlPipe } from "../../../src/lib/shell.ts";
 
-// Cargo install needs a C linker (build-essential from dev)
-export const dependsOn = ["dev"];
+// Cargo install needs a C linker (build-essential from build-deps)
+export const dependsOn = ["build-deps"];
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Rust via rustup");

@@ -36,9 +36,18 @@ export async function run(ctx: TaskContext): Promise<void> {
     return;
   }
 
+  // sops is installed to ~/.local/bin
+  // In realistic test mode, use PATH as-is from shell config
+  // In normal mode, extend PATH with ~/.local/bin
+  const currentPath = Deno.env.get("PATH") ?? "";
+  const env: Record<string, string> = {
+    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${ctx.home}/.local/bin:${currentPath}`,
+  };
+
   const result = await shellRun(ctx, ["sops", "-d", secretsFile], {
     stdout: "piped",
     stderr: "piped",
+    env,
   });
 
   if (result.code !== 0) {

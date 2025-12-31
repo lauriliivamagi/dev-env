@@ -1,14 +1,8 @@
 import { type TaskContext, verify as v } from "../../../src/lib/mod.ts";
-import { apt, aptUpdate, pnpm } from "../../../src/lib/shell.ts";
-
-export const dependsOn = ["volta"];
+import { apt } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
-  await aptUpdate(ctx);
-
   await apt(ctx, [
-    "build-essential",
-    "libasound2-dev",
     "git",
     "fzf",
     "curl",
@@ -33,8 +27,6 @@ export async function run(ctx: TaskContext): Promise<void> {
     "git-lfs",
     "parallel",
   ]);
-
-  await pnpm(ctx, ["add", "-g", "tldr"]);
 }
 
 export async function verify(_ctx: TaskContext): Promise<void> {

@@ -22,6 +22,13 @@ export async function run(ctx: TaskContext): Promise<void> {
     PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}:${currentPath}`,
   };
   await runOrFail(ctx, [`${ctx.home}/.volta/bin/pnpm`, "setup"], { env });
+
+  log.info("Installing global npm packages");
+  const pnpmCmd = `${ctx.home}/.volta/bin/pnpm`;
+  await runOrFail(ctx, [pnpmCmd, "install", "-g", "srt"], { env });
+  await runOrFail(ctx, [pnpmCmd, "install", "-g", "dendron"], { env });
+  await runOrFail(ctx, [pnpmCmd, "install", "-g", "@marp-team/marp-cli"], { env });
+  await runOrFail(ctx, [pnpmCmd, "install", "-g", "@mermaid-js/mermaid-cli"], { env });
 }
 
 export async function verify(ctx: TaskContext): Promise<void> {

@@ -17,7 +17,6 @@ export async function run(ctx: TaskContext): Promise<void> {
     "p7zip-full",
     "pass",
     "pdfgrep",
-    "pyenv",
 
     // Desktop apps from standard repos
     "obs-studio",
@@ -127,7 +126,6 @@ export async function verify(_ctx: TaskContext): Promise<void> {
   await v.assertCommand("nmap", "--version");
   await v.assertCommand("pass", "--version");
   await v.assertCommand("pdfgrep", "--version");
-  await v.assertCommand("pyenv", "--version");
 
   // GUI apps from standard repos
   await v.assertFile("/usr/bin/obs");

@@ -117,6 +117,7 @@ export async function assertCommandWithPath(
       `${home}/.deno/bin`,
       `${home}/.bun/bin`,
       `${home}/.volta/bin`,
+      `${home}/.pyenv/shims`,
       `${home}/.local/share/pnpm`,
       `${home}/.opencode/bin`,
       `${home}/go/bin`,
@@ -132,7 +133,7 @@ export async function assertCommandWithPath(
       args: cmdArgs,
       stdout: "null",
       stderr: "null",
-      env: { PATH: path },
+      env: { ...Deno.env.toObject(), PATH: path },
     });
     const { code } = await command.output();
     assert(

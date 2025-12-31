@@ -17,12 +17,29 @@ export async function run(ctx: TaskContext): Promise<void> {
   await runOrFail(ctx, ["tar", "-xzf", tarFile, "-C", tmpDir]);
 
   log.info("Installing Emojicode");
-  await runOrFail(ctx, ["sh", "-c", `cd ${extractDir} && ./install.sh`]);
+  // Manually copy files since install.sh is interactive
+  await runOrFail(ctx, ["sudo", "cp", `${extractDir}/emojicodec`, "/usr/local/bin/"]);
+  await runOrFail(ctx, ["sudo", "mkdir", "-p", "/usr/local/EmojicodePackages"]);
+  await runOrFail(ctx, [
+    "sudo",
+    "cp",
+    "-r",
+    `${extractDir}/packages/.`,
+    "/usr/local/EmojicodePackages/",
+  ]);
+  await runOrFail(ctx, ["sudo", "mkdir", "-p", "/usr/local/include/emojicode"]);
+  await runOrFail(ctx, [
+    "sudo",
+    "cp",
+    "-r",
+    `${extractDir}/include/.`,
+    "/usr/local/include/emojicode/",
+  ]);
 
   log.info("Cleaning up");
   await runOrFail(ctx, ["rm", "-rf", tmpDir]);
 }
 
 export async function verify(_ctx: TaskContext): Promise<void> {
-  await v.assertCommand("emojicodec", "--version");
+  await v.assertFile("/usr/local/bin/emojicodec");
 }

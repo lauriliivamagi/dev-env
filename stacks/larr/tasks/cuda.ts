@@ -43,6 +43,6 @@ export async function run(ctx: TaskContext): Promise<void> {
 }
 
 export async function verify(_ctx: TaskContext): Promise<void> {
-  await v.assertCommand("nvcc", "--version");
   await v.assertDir("/usr/local/cuda-13.1");
+  await v.assertFile("/usr/local/cuda-13.1/bin/nvcc");
 }

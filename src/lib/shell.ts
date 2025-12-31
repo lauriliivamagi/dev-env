@@ -66,7 +66,14 @@ export async function runOrFail(
 
 export async function apt(ctx: TaskContext, packages: string[]): Promise<void> {
   assert(packages.length > 0, "packages array cannot be empty");
-  await runOrFail(ctx, ["sudo", "apt", "install", "-y", ...packages]);
+  await runOrFail(ctx, [
+    "sudo",
+    "DEBIAN_FRONTEND=noninteractive",
+    "apt",
+    "install",
+    "-y",
+    ...packages,
+  ]);
 }
 
 export async function aptUpdate(ctx: TaskContext): Promise<void> {
