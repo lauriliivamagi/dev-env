@@ -1,6 +1,19 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
 import { curlPipe, runOrFail } from "../../../src/lib/shell.ts";
 
+/**
+ * Check if Volta needs to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const voltaBin = `${ctx.home}/.volta/bin/volta`;
+  try {
+    await Deno.stat(voltaBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Volta");
   await curlPipe(ctx, "https://get.volta.sh", ["bash"]);

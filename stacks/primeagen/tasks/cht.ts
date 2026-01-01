@@ -1,6 +1,19 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
 import { curl, runOrFail } from "../../../src/lib/shell.ts";
 
+/**
+ * Check if cht.sh needs to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const chtBin = `${ctx.home}/.local/bin/cht.sh`;
+  try {
+    await Deno.stat(chtBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const binPath = `${ctx.home}/.local/bin/cht.sh`;
 

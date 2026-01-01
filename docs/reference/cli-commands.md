@@ -91,9 +91,28 @@ deno task sync -s primeagen --dry
 ```
 
 **Output in dry run:**
+
 ```
 [DRY] would run: apt install ripgrep
 [DRY] cp ~/.config/nvim -> ~/.config/nvim
+```
+
+### --diff
+
+Show file diffs before applying changes. Removed lines shown in red, added lines in green.
+
+```bash
+deno task run -s primeagen --diff
+deno task sync -s primeagen --diff
+```
+
+**Output with diff:**
+
+```
+--- /home/user/.config/nvim/init.lua
++++ /home/user/.config/nvim/init.lua
+- old setting
++ new setting
 ```
 
 ### -h, --help

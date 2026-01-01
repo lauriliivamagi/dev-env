@@ -4,14 +4,42 @@ Reference for file system operations in `src/lib/fs.ts`.
 
 ## Overview
 
-| Function | Purpose |
-|----------|---------|
-| `copyFile()` | Copy a single file |
-| `copyDir()` | Copy a directory recursively |
-| `remove()` | Remove a file or directory |
-| `mkdir()` | Create a directory (and parents) |
-| `writeFile()` | Write content to a file with optional permissions |
-| `syncConfigDir()` | Synchronize directories |
+| Function | Purpose | Returns |
+|----------|---------|---------|
+| `copyFile()` | Copy a single file | `FsResult` |
+| `copyDir()` | Copy a directory recursively | `FsResult` |
+| `remove()` | Remove a file or directory | `FsResult` |
+| `mkdir()` | Create a directory (and parents) | `FsResult` |
+| `writeFile()` | Write content to a file with optional permissions | `FsResult` |
+| `syncConfigDir()` | Synchronize directories | `FsResult` |
+
+## Changed Tracking
+
+All operations return `FsResult` indicating if modifications occurred:
+
+```typescript
+interface FsResult {
+  changed: boolean;
+}
+```
+
+**Example:**
+
+```typescript
+const { changed } = await fs.writeFile(ctx, path, content);
+if (changed) {
+  log.info("File was updated");
+} else {
+  log.info("File unchanged, skipped");
+}
+```
+
+**Smart skipping:**
+
+- `writeFile()` - skips if content identical
+- `copyFile()` - skips if source/dest content match
+- `mkdir()` - returns `false` if directory exists
+- `remove()` - returns `false` if path didn't exist
 
 ## Safety Features
 
@@ -50,12 +78,14 @@ async function copyFile(
   ctx: TaskContext,
   src: string,
   dest: string,
-): Promise<void>
+): Promise<FsResult>
 ```
 
 **Behavior:**
+
 - Creates destination directory if needed
-- Overwrites existing file
+- **Skips if source and destination content are identical** (returns `changed: false`)
+- Shows diff if `ctx.diff` is true
 - Respects dry run mode
 
 **Example:**
@@ -76,11 +106,12 @@ async function copyDir(
   ctx: TaskContext,
   src: string,
   dest: string,
-): Promise<void>
+): Promise<FsResult>
 ```
 
 **Behavior:**
-- Removes destination if it exists
+
+- Merges into destination (preserves existing files)
 - Copies entire directory tree
 - Respects dry run mode
 
@@ -98,12 +129,13 @@ await copyDir(
 Remove a file or directory.
 
 ```typescript
-async function remove(ctx: TaskContext, path: string): Promise<void>
+async function remove(ctx: TaskContext, path: string): Promise<FsResult>
 ```
 
 **Behavior:**
+
 - Recursive removal for directories
-- No error if path doesn't exist
+- Returns `changed: false` if path doesn't exist
 - Respects dry run mode
 
 **Example:**
@@ -116,12 +148,13 @@ await remove(ctx, `${ctx.home}/.cache/old-tool`);
 Create a directory (and parents).
 
 ```typescript
-async function mkdir(ctx: TaskContext, path: string): Promise<void>
+async function mkdir(ctx: TaskContext, path: string): Promise<FsResult>
 ```
 
 **Behavior:**
+
 - Creates parent directories as needed
-- No error if directory exists
+- Returns `changed: false` if directory exists
 - Respects dry run mode
 
 **Example:**
@@ -139,18 +172,21 @@ async function writeFile(
   path: string,
   content: string,
   mode?: number,
-): Promise<void>
+): Promise<FsResult>
 ```
 
 **Parameters:**
+
 - `ctx` — Task context
 - `path` — Destination file path
 - `content` — File content to write
 - `mode` — Optional Unix permissions (e.g., `0o600` for private files)
 
 **Behavior:**
+
 - Creates parent directories as needed
-- Overwrites existing file
+- **Skips if content is identical** (returns `changed: false`)
+- Shows diff if `ctx.diff` is true
 - Sets permissions if `mode` provided
 - Respects dry run mode
 
@@ -191,7 +227,7 @@ async function syncConfigDir(
   ctx: TaskContext,
   srcBase: string,
   destBase: string,
-): Promise<void>
+): Promise<FsResult>
 ```
 
 **Behavior:**

@@ -132,11 +132,13 @@ export function createMockContext(
 ): TaskContext {
   return {
     dryRun: true,
+    diff: false,
     home: "/tmp/test-home",
     devEnv: "/tmp/test-dev-env",
     configHome: "/tmp/test-home/.config",
     stack: "test",
     stackRoot: "/tmp/test-dev-env/stacks/test",
+    vars: {},
     ...overrides,
   };
 }

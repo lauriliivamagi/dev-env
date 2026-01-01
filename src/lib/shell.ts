@@ -10,6 +10,10 @@ export interface RunOptions {
   stdin?: "inherit" | "null";
   stdout?: "inherit" | "null" | "piped";
   stderr?: "inherit" | "null" | "piped";
+  /** Indices of arguments to redact in error messages */
+  redactArgs?: number[];
+  /** Timeout in milliseconds */
+  timeout?: number;
 }
 
 export async function run(
@@ -31,26 +35,51 @@ export async function run(
     return { code: 0 };
   }
 
-  const command = new Deno.Command(executable, {
-    args: cmd.slice(1),
-    cwd: opts.cwd,
-    env: opts.env,
-    stdin: opts.stdin ?? "inherit",
-    stdout: opts.stdout ?? "inherit",
-    stderr: opts.stderr ?? "inherit",
-  });
+  const abortController = opts.timeout ? new AbortController() : undefined;
+  let timedOut = false;
+  const timeoutId = opts.timeout
+    ? setTimeout(() => {
+        timedOut = true;
+        abortController!.abort();
+      }, opts.timeout)
+    : undefined;
 
-  const result = await command.output();
+  try {
+    const command = new Deno.Command(executable, {
+      args: cmd.slice(1),
+      cwd: opts.cwd,
+      env: opts.env,
+      stdin: opts.stdin ?? "inherit",
+      stdout: opts.stdout ?? "inherit",
+      stderr: opts.stderr ?? "inherit",
+      signal: abortController?.signal,
+    });
 
-  return {
-    code: result.code,
-    stdout: opts.stdout === "piped"
-      ? new TextDecoder().decode(result.stdout)
-      : undefined,
-    stderr: opts.stderr === "piped"
-      ? new TextDecoder().decode(result.stderr)
-      : undefined,
-  };
+    const result = await command.output();
+
+    // Check if we timed out (process killed with SIGTERM returns 143, not AbortError)
+    if (timedOut) {
+      return { code: 124 }; // Standard timeout exit code
+    }
+
+    return {
+      code: result.code,
+      stdout: opts.stdout === "piped"
+        ? new TextDecoder().decode(result.stdout)
+        : undefined,
+      stderr: opts.stderr === "piped"
+        ? new TextDecoder().decode(result.stderr)
+        : undefined,
+    };
+  } catch (error) {
+    // Handle AbortError in case Deno throws it in some versions
+    if (timedOut || (error instanceof Error && error.name === "AbortError")) {
+      return { code: 124 }; // Standard timeout exit code
+    }
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 export async function runOrFail(
@@ -60,7 +89,13 @@ export async function runOrFail(
 ): Promise<void> {
   const result = await run(ctx, cmd, opts);
   if (result.code !== 0) {
-    throw new Error(`Command failed with code ${result.code}: ${cmd.join(" ")}`);
+    // Redact sensitive arguments in error messages to prevent credential leakage
+    const displayCmd = opts.redactArgs
+      ? cmd.map((arg, i) => (opts.redactArgs!.includes(i) ? "[REDACTED]" : arg))
+      : cmd;
+    throw new Error(
+      `Command failed with code ${result.code}: ${displayCmd.join(" ")}`,
+    );
   }
 }
 

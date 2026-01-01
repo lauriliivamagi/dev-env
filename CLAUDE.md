@@ -45,6 +45,7 @@ deno task sync:primeagen           # Sync primeagen stack configs
 ```
 
 Add `--dry` or `-d` to `run`/`sync` for dry-run mode.
+Add `--diff` to show file changes before applying.
 
 ### Manual Docker Testing
 
@@ -54,9 +55,52 @@ Test tasks in an isolated Docker container:
 make test-dry                      # Dry-run all tasks in Docker
 make test TASK=zsh                 # Test a specific task in Docker
 make test STACK=larr               # Test a different stack
+make test-all STACK=larr           # Run all tasks (non-interactive)
 make shell                         # Open interactive shell for debugging
 make clean                         # Remove test Docker image
 ```
+
+**Full integration test (non-TTY environments like Claude Code):**
+
+The `make test-full` target requires a TTY. For non-interactive environments, use this command:
+
+```bash
+# For larr stack:
+docker build -t dev-env-test -f Dockerfile.test . && docker run --rm \
+    --privileged \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -e HOME=/home/testuser \
+    -e USER=testuser \
+    -e XDG_CONFIG_HOME=/home/testuser/.config \
+    -e DEV_ENV=/home/testuser/dev-env \
+    -e REALISTIC_TEST=1 \
+    dev-env-test \
+    bash -c "cp test/secrets/*.enc.yaml stacks/larr/secrets/ && \
+           sudo apt-get update -qq && \
+           deno task sync -s larr && \
+           zsh -i -l -c 'deno task run -s larr'"
+
+# For primeagen stack:
+docker build -t dev-env-test -f Dockerfile.test . && docker run --rm \
+    --privileged \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -e HOME=/home/testuser \
+    -e USER=testuser \
+    -e XDG_CONFIG_HOME=/home/testuser/.config \
+    -e DEV_ENV=/home/testuser/dev-env \
+    -e REALISTIC_TEST=1 \
+    dev-env-test \
+    bash -c "cp test/secrets/*.enc.yaml stacks/primeagen/secrets/ && \
+           sudo apt-get update -qq && \
+           deno task sync -s primeagen && \
+           zsh -i -l -c 'deno task run -s primeagen'"
+```
+
+Key flags explained:
+- `zsh -i -l`: Interactive login shell that sources `.zshrc`/`.zsh_profile` for proper PATH setup
+- `REALISTIC_TEST=1`: Uses PATH from shell config instead of hardcoded paths
+- `--privileged`: Required for Docker-in-Docker tasks
+- Secrets are copied before running to enable SSH key and config decryption
 
 ## Architecture
 
@@ -103,11 +147,13 @@ export async function run(ctx: TaskContext): Promise<void>
 ### TaskContext
 All operations receive a `TaskContext` with:
 - `dryRun: boolean` - Check before making changes
+- `diff: boolean` - Show diffs for file changes
 - `home: string` - User's home directory
 - `devEnv: string` - Path to this repository
 - `configHome: string` - XDG config home (~/.config)
 - `stack: string` - Active stack name
 - `stackRoot: string` - Path to active stack directory
+- `vars: Record<string, string>` - Stack variables from `vars.ts`
 
 ## Tiger Style Assertions
 
@@ -160,6 +206,50 @@ deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 ```
 
 Tasks are sorted topologically (dependencies first), with alphabetical ordering for independent tasks. Circular dependencies are detected and cause an error.
+
+### Stack Variables
+
+Define stack-wide variables in `stacks/<stack>/vars.ts`:
+```typescript
+export const vars: Record<string, string> = {
+  goVersion: "1.23.4",
+  gitName: "Your Name",
+  gitEmail: "you@example.com",
+};
+```
+
+Access in tasks via `ctx.vars`:
+```typescript
+export async function run(ctx: TaskContext): Promise<void> {
+  const version = ctx.vars.goVersion ?? "1.23.4";  // Fallback if not defined
+}
+```
+
+### Changed Tracking
+
+File operations return `{ changed: boolean }` to indicate if modifications occurred:
+```typescript
+const { changed } = await fs.writeFile(ctx, path, content);
+if (changed) {
+  log.info("File was updated");
+}
+```
+
+Operations skip unchanged files automatically:
+- `writeFile()` - skips if content identical
+- `copyFile()` - skips if source/dest match
+- `mkdir()` - skips if directory exists
+- `remove()` - returns false if path didn't exist
+
+### Diff Mode
+
+Show file changes before applying with `--diff`:
+```bash
+deno task run -s larr --diff
+deno task sync -s larr --diff
+```
+
+Displays removed lines in red, added lines in green.
 
 ## Creating a New Stack
 

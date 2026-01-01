@@ -34,6 +34,8 @@ Every tool installed. Every config in place. Every machine identical.
 - **Reproducible environments** — Same setup on any machine, every time
 - **Encrypted secrets** — API keys and SSH keys stored safely in git
 - **Dry-run mode** — Preview changes before making them
+- **Diff mode** — See exactly what will change before applying
+- **Smart skipping** — Skips unchanged files automatically
 - **Auto-discovery** — Drop a task file, it just works
 - **Full ownership** — TypeScript you can read and modify, not magic you don't understand
 
@@ -42,6 +44,9 @@ Every tool installed. Every config in place. Every machine identical.
 ```bash
 # Preview what will be installed (safe, makes no changes)
 deno task run -s larr --dry
+
+# See what files would change
+deno task run -s larr --diff
 
 # Run specific tasks
 deno task run -s larr rust neovim docker

@@ -4,7 +4,7 @@ import { runTasks } from "./commands/run.ts";
 import { syncConfigs } from "./commands/sync.ts";
 
 const args = parseArgs(Deno.args, {
-  boolean: ["dry", "help"],
+  boolean: ["dry", "diff", "help"],
   string: ["stack"],
   alias: { d: "dry", h: "help", s: "stack" },
 });
@@ -23,12 +23,14 @@ USAGE:
 OPTIONS:
   -s, --stack   Stack name (required)
   -d, --dry     Dry run mode (show what would be done)
+  --diff        Show diffs for file changes
   -h, --help    Show this help message
 
 EXAMPLES:
   deno task run -s primeagen              # Run all tasks in primeagen stack
   deno task run -s primeagen neovim       # Run only tasks matching 'neovim'
   deno task run -s primeagen --dry        # Dry run all tasks
+  deno task run -s primeagen --diff       # Show diffs for file changes
   deno task sync -s primeagen             # Sync configs
   deno task sync -s primeagen --dry       # Dry run sync
 `);
@@ -40,10 +42,13 @@ if (args.help || !command) {
 }
 
 try {
-  const ctx = getContext({ dryRun: args.dry, stack: args.stack });
+  const ctx = await getContext({ dryRun: args.dry, diff: args.diff, stack: args.stack });
 
   if (args.dry) {
     log.info("Dry run mode enabled");
+  }
+  if (args.diff) {
+    log.info("Diff mode enabled");
   }
 
   switch (command) {

@@ -4,6 +4,19 @@ import { join } from "@std/path";
 
 const GITLEAKS_VERSION = "8.30.0";
 
+/**
+ * Check if gitleaks needs to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const gitleaksBin = `${ctx.home}/.local/bin/gitleaks`;
+  try {
+    await Deno.stat(gitleaksBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const binDir = `${ctx.home}/.local/bin`;
   await fs.mkdir(ctx, binDir);

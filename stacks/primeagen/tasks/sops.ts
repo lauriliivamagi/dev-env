@@ -5,6 +5,21 @@ import { join } from "@std/path";
 const AGE_VERSION = "1.3.1";
 const SOPS_VERSION = "3.11.0";
 
+/**
+ * Check if age and sops need to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const binDir = `${ctx.home}/.local/bin`;
+  try {
+    await Deno.stat(`${binDir}/age`);
+    await Deno.stat(`${binDir}/age-keygen`);
+    await Deno.stat(`${binDir}/sops`);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const binDir = `${ctx.home}/.local/bin`;
   await fs.mkdir(ctx, binDir);

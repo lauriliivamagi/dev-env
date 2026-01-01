@@ -1,5 +1,12 @@
-import { type TaskContext, assert, fs, log, verify as v } from "../../../src/lib/mod.ts";
+import {
+  type TaskContext,
+  assert,
+  fs,
+  log,
+  verify as v,
+} from "../../../src/lib/mod.ts";
 import { run as shellRun } from "../../../src/lib/shell.ts";
+import { assertSafeFilename } from "../../../src/lib/fs.ts";
 import { join } from "@std/path";
 import { exists } from "@std/fs";
 import { parse as parseYaml } from "@std/yaml";
@@ -71,6 +78,9 @@ export async function run(ctx: TaskContext): Promise<void> {
 
   // Write each key to ~/.ssh/
   for (const [filename, content] of Object.entries(secrets.ssh_keys)) {
+    // Validate filename to prevent path traversal attacks via malicious YAML
+    assertSafeFilename(filename);
+
     const keyPath = join(sshDir, filename);
     log.info(`Installing SSH key: ${filename}`);
 

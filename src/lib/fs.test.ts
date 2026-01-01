@@ -1,7 +1,8 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { exists } from "@std/fs";
 import { join } from "@std/path";
 import {
+  assertSafeFilename,
   copyDir,
   copyFile,
   mkdir,
@@ -440,6 +441,327 @@ Deno.test("syncConfigDir - syncs all subdirectories", async () => {
       await Deno.readTextFile(join(destBase, "nvim", "init.lua")),
       "-- nvim config",
     );
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+// ============================================================================
+// Path traversal protection tests (prefix checking)
+// ============================================================================
+
+Deno.test("writeFile - blocks paths under dangerous directories", async () => {
+  const ctx = createMockContext();
+  // These should all be blocked because they are under /etc
+  await assertRejects(
+    () => writeFile(ctx, "/etc/passwd", "content"),
+    Error,
+    "dangerous path",
+  );
+  await assertRejects(
+    () => writeFile(ctx, "/etc/shadow", "content"),
+    Error,
+    "dangerous path",
+  );
+  await assertRejects(
+    () => writeFile(ctx, "/etc/sudoers.d/custom", "content"),
+    Error,
+    "dangerous path",
+  );
+});
+
+Deno.test("copyFile - blocks paths under prefix-dangerous directories", async () => {
+  const ctx = createMockContext();
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const src = join(tmpDir, "source.txt");
+    await Deno.writeTextFile(src, "content");
+
+    // Destination under /usr should be blocked (prefix-dangerous)
+    await assertRejects(
+      () => copyFile(ctx, src, "/usr/local/bin/script"),
+      Error,
+      "dangerous path",
+    );
+
+    // Destination under /etc should be blocked (prefix-dangerous)
+    await assertRejects(
+      () => copyFile(ctx, src, "/etc/passwd"),
+      Error,
+      "dangerous path",
+    );
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("remove - blocks paths under prefix-dangerous directories", async () => {
+  const ctx = createMockContext();
+  await assertRejects(
+    () => remove(ctx, "/var/log/syslog"),
+    Error,
+    "dangerous path",
+  );
+  await assertRejects(
+    () => remove(ctx, "/etc/passwd"),
+    Error,
+    "dangerous path",
+  );
+});
+
+Deno.test("remove - blocks exact dangerous paths", async () => {
+  const ctx = createMockContext();
+  // /home and /tmp are exact-match only
+  await assertRejects(() => remove(ctx, "/home"), Error, "dangerous path");
+  await assertRejects(() => remove(ctx, "/tmp"), Error, "dangerous path");
+});
+
+Deno.test("mkdir - blocks paths under prefix-dangerous directories", async () => {
+  const ctx = createMockContext();
+  await assertRejects(
+    () => mkdir(ctx, "/opt/myapp"),
+    Error,
+    "dangerous path",
+  );
+  await assertRejects(
+    () => mkdir(ctx, "/var/cache/custom"),
+    Error,
+    "dangerous path",
+  );
+});
+
+// ============================================================================
+// assertSafeFilename tests
+// ============================================================================
+
+Deno.test("assertSafeFilename - accepts valid filenames", () => {
+  // These should not throw
+  assertSafeFilename("id_rsa");
+  assertSafeFilename("id_rsa.pub");
+  assertSafeFilename("config.yaml");
+  assertSafeFilename("my-file_name.txt");
+  assertSafeFilename(".hidden");
+});
+
+Deno.test("assertSafeFilename - rejects path traversal", () => {
+  assertThrows(
+    () => assertSafeFilename(".."),
+    Error,
+    "Invalid filename",
+  );
+  assertThrows(
+    () => assertSafeFilename("../etc/passwd"),
+    Error,
+    "Invalid filename",
+  );
+  assertThrows(
+    () => assertSafeFilename("foo/.."),
+    Error,
+    "Invalid filename",
+  );
+});
+
+Deno.test("assertSafeFilename - rejects forward slashes", () => {
+  assertThrows(
+    () => assertSafeFilename("path/to/file"),
+    Error,
+    "Invalid filename",
+  );
+  assertThrows(
+    () => assertSafeFilename("/absolute"),
+    Error,
+    "Invalid filename",
+  );
+});
+
+Deno.test("assertSafeFilename - rejects backslashes", () => {
+  assertThrows(
+    () => assertSafeFilename("path\\to\\file"),
+    Error,
+    "Invalid filename",
+  );
+  assertThrows(
+    () => assertSafeFilename("..\\parent"),
+    Error,
+    "Invalid filename",
+  );
+});
+
+// ============================================================================
+// Changed tracking tests (FsResult)
+// ============================================================================
+
+Deno.test("writeFile - returns changed: true for new file", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const file = join(tmpDir, "new.txt");
+
+    const result = await writeFile(ctx, file, "content");
+
+    assertEquals(result.changed, true);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("writeFile - returns changed: false when content identical", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const file = join(tmpDir, "existing.txt");
+    await Deno.writeTextFile(file, "same content");
+
+    const result = await writeFile(ctx, file, "same content");
+
+    assertEquals(result.changed, false);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("writeFile - returns changed: true when content differs", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const file = join(tmpDir, "existing.txt");
+    await Deno.writeTextFile(file, "old content");
+
+    const result = await writeFile(ctx, file, "new content");
+
+    assertEquals(result.changed, true);
+    assertEquals(await Deno.readTextFile(file), "new content");
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("copyFile - returns changed: false when content identical", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const src = join(tmpDir, "source.txt");
+    const dest = join(tmpDir, "dest.txt");
+    await Deno.writeTextFile(src, "same content");
+    await Deno.writeTextFile(dest, "same content");
+
+    const result = await copyFile(ctx, src, dest);
+
+    assertEquals(result.changed, false);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("copyFile - returns changed: true when content differs", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const src = join(tmpDir, "source.txt");
+    const dest = join(tmpDir, "dest.txt");
+    await Deno.writeTextFile(src, "new content");
+    await Deno.writeTextFile(dest, "old content");
+
+    const result = await copyFile(ctx, src, dest);
+
+    assertEquals(result.changed, true);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("mkdir - returns changed: false when directory exists", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const existingDir = join(tmpDir, "existing");
+    await Deno.mkdir(existingDir);
+
+    const result = await mkdir(ctx, existingDir);
+
+    assertEquals(result.changed, false);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("mkdir - returns changed: true for new directory", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const newDir = join(tmpDir, "newdir");
+
+    const result = await mkdir(ctx, newDir);
+
+    assertEquals(result.changed, true);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("remove - returns changed: false when path doesn't exist", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const nonExistent = join(tmpDir, "nonexistent");
+
+    const result = await remove(ctx, nonExistent);
+
+    assertEquals(result.changed, false);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("remove - returns changed: true when path exists", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const file = join(tmpDir, "file.txt");
+    await Deno.writeTextFile(file, "content");
+
+    const result = await remove(ctx, file);
+
+    assertEquals(result.changed, true);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+// ============================================================================
+// Diff mode tests
+// ============================================================================
+
+Deno.test("writeFile - diff mode shows changes without error", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false, diff: true });
+    const file = join(tmpDir, "file.txt");
+    await Deno.writeTextFile(file, "old line\n");
+
+    // Should not throw, just print diff
+    const result = await writeFile(ctx, file, "new line\n");
+
+    assertEquals(result.changed, true);
+    assertEquals(await Deno.readTextFile(file), "new line\n");
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
+Deno.test("copyFile - diff mode shows changes without error", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false, diff: true });
+    const src = join(tmpDir, "source.txt");
+    const dest = join(tmpDir, "dest.txt");
+    await Deno.writeTextFile(src, "new content\n");
+    await Deno.writeTextFile(dest, "old content\n");
+
+    // Should not throw, just print diff
+    const result = await copyFile(ctx, src, dest);
+
+    assertEquals(result.changed, true);
   } finally {
     await Deno.remove(tmpDir, { recursive: true });
   }

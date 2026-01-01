@@ -4,6 +4,19 @@ import { cargoInstall, curlPipe } from "../../../src/lib/shell.ts";
 // Cargo install needs a C linker (build-essential from libs)
 export const dependsOn = ["libs"];
 
+/**
+ * Check if Rust needs to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const cargoBin = `${ctx.home}/.cargo/bin/cargo`;
+  try {
+    await Deno.stat(cargoBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   await curlPipe(ctx, "https://sh.rustup.rs", ["sh", "-s", "--", "-y"]);
 

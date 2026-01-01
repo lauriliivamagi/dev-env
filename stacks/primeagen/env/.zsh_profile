@@ -2,7 +2,7 @@ export XDG_CONFIG_HOME=$HOME/.config
 VIM="nvim"
 
 PERSONAL=$XDG_CONFIG_HOME/personal
-DEV_ENV=$HOME/dev
+DEV_ENV=${DEV_ENV:-$HOME/dev}
 for i in `find -L $PERSONAL`; do
     source $i
 done
@@ -66,6 +66,7 @@ addToPathFront $HOME/personal/sumneko/bin
 addToPathFront $HOME/.deno/bin
 addToPathFront $HOME/.bun/bin
 addToPathFront $HOME/.volta/bin
+addToPathFront $HOME/.opencode/bin
 addToPath $HOME/.cargo/bin
 addToPath $HOME/personal/ghostty/zig-out/bin
 addToPath $HOME/.local/personal

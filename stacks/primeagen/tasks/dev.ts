@@ -3,6 +3,19 @@ import { apt, aptUpdate, goInstall, pnpm } from "../../../src/lib/shell.ts";
 
 export const dependsOn = ["node"];
 
+/**
+ * Check if dev tools need to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const tldrBin = `${ctx.home}/.local/share/pnpm/tldr`;
+  try {
+    await Deno.stat(tldrBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   await aptUpdate(ctx);
 

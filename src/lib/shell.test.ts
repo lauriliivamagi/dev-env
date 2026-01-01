@@ -266,3 +266,86 @@ Deno.test("runOrFail - does not throw on success", async () => {
 // - specific tools installed
 // - elevated permissions (apt)
 // Integration tests in Docker cover these scenarios.
+
+// ============================================================================
+// Timeout behavior tests
+// ============================================================================
+
+Deno.test("run - timeout returns exit code 124", async () => {
+  const ctx = createMockContext({ dryRun: false });
+  // Sleep for 10 seconds but timeout after 100ms
+  const result = await run(ctx, ["sleep", "10"], { timeout: 100 });
+  assertEquals(result.code, 124); // Standard timeout exit code
+});
+
+Deno.test("run - command completes before timeout", async () => {
+  const ctx = createMockContext({ dryRun: false });
+  // Quick command with generous timeout
+  const result = await run(ctx, ["echo", "hello"], {
+    stdout: "piped",
+    timeout: 5000,
+  });
+  assertEquals(result.code, 0);
+  assertEquals(result.stdout?.trim(), "hello");
+});
+
+Deno.test("runOrFail - timeout triggers error with code 124", async () => {
+  const ctx = createMockContext({ dryRun: false });
+  await assertRejects(
+    () => runOrFail(ctx, ["sleep", "10"], { timeout: 100 }),
+    Error,
+    "Command failed with code 124",
+  );
+});
+
+// ============================================================================
+// Argument redaction tests
+// ============================================================================
+
+Deno.test("runOrFail - redacts specified argument indices in error", async () => {
+  const ctx = createMockContext({ dryRun: false });
+  try {
+    await runOrFail(ctx, ["sh", "-c", "exit 1", "secret-token"], {
+      redactArgs: [3], // Redact the 4th argument (index 3)
+    });
+  } catch (e) {
+    const error = e as Error;
+    // Error message should contain [REDACTED] instead of secret-token
+    assertEquals(error.message.includes("[REDACTED]"), true);
+    assertEquals(error.message.includes("secret-token"), false);
+    return;
+  }
+  throw new Error("Expected runOrFail to throw");
+});
+
+Deno.test("runOrFail - redacts multiple argument indices", async () => {
+  const ctx = createMockContext({ dryRun: false });
+  try {
+    await runOrFail(ctx, ["sh", "-c", "exit 1", "token1", "token2"], {
+      redactArgs: [3, 4], // Redact indices 3 and 4
+    });
+  } catch (e) {
+    const error = e as Error;
+    // Both tokens should be redacted
+    assertEquals(error.message.includes("token1"), false);
+    assertEquals(error.message.includes("token2"), false);
+    // Should have two [REDACTED] instances
+    const matches = error.message.match(/\[REDACTED\]/g);
+    assertEquals(matches?.length, 2);
+    return;
+  }
+  throw new Error("Expected runOrFail to throw");
+});
+
+Deno.test("runOrFail - no redaction when redactArgs not specified", async () => {
+  const ctx = createMockContext({ dryRun: false });
+  try {
+    await runOrFail(ctx, ["sh", "-c", "exit 1", "visible-arg"]);
+  } catch (e) {
+    const error = e as Error;
+    // Without redactArgs, the argument should be visible
+    assertEquals(error.message.includes("visible-arg"), true);
+    return;
+  }
+  throw new Error("Expected runOrFail to throw");
+});

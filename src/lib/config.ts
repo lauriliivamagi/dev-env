@@ -30,16 +30,18 @@ function findRepoRoot(): string | null {
 
 export interface TaskContext {
   dryRun: boolean;
+  diff: boolean;
   devEnv: string;
   home: string;
   configHome: string;
   stack: string;
   stackRoot: string;
+  vars: Record<string, string>;
 }
 
-export function getContext(
-  args: { dryRun?: boolean; stack?: string } = {},
-): TaskContext {
+export async function getContext(
+  args: { dryRun?: boolean; diff?: boolean; stack?: string } = {},
+): Promise<TaskContext> {
   const home = Deno.env.get("HOME");
   if (!home) {
     throw new Error("HOME environment variable is required");
@@ -55,13 +57,27 @@ export function getContext(
   const configHome = Deno.env.get("XDG_CONFIG_HOME") || `${home}/.config`;
   const stackRoot = join(devEnv, "stacks", stack);
 
+  // Load stack variables if vars.ts exists
+  let vars: Record<string, string> = {};
+  const varsPath = join(stackRoot, "vars.ts");
+  try {
+    const mod = await import(`file://${varsPath}`);
+    if (mod.vars && typeof mod.vars === "object") {
+      vars = mod.vars;
+    }
+  } catch {
+    // vars.ts doesn't exist or failed to load - that's fine
+  }
+
   const ctx: TaskContext = {
     dryRun: args.dryRun ?? false,
+    diff: args.diff ?? false,
     devEnv,
     home,
     configHome,
     stack,
     stackRoot,
+    vars,
   };
 
   assert(ctx.home.length > 0, "home must be non-empty");

@@ -4,6 +4,19 @@ import { join } from "@std/path";
 
 const ZIG_VERSION = "0.13.0";
 
+/**
+ * Check if Zig needs to be installed.
+ */
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const zigBin = join(ctx.home, ".local", "bin", "zig");
+  try {
+    await Deno.stat(zigBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const binDir = join(ctx.home, ".local", "bin");
   const zigInstallDir = join(ctx.home, ".local", "zig");
