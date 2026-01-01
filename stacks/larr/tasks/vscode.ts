@@ -1,5 +1,10 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
-import { apt, run as shellRun, runOrFail } from "../../../src/lib/shell.ts";
+import { apt, checkCommandOutput, run as shellRun, runOrFail } from "../../../src/lib/shell.ts";
+
+export async function shouldRun(_ctx: TaskContext): Promise<boolean> {
+  const result = await checkCommandOutput(["code-insiders", "--version"]);
+  return result.code !== 0;
+}
 
 const EXTENSIONS = [
   "42crunch.vscode-openapi",
