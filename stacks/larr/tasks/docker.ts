@@ -28,6 +28,7 @@ export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, [
     "docker-ce",
     "docker-ce-cli",
+    "docker-ce-rootless-extras",
     "containerd.io",
     "docker-buildx-plugin",
     "docker-compose-plugin",
