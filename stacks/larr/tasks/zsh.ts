@@ -1,6 +1,16 @@
 import { type TaskContext, fs, log, verify as v } from "../../../src/lib/mod.ts";
 import { apt, gitClone, runOrFail } from "../../../src/lib/shell.ts";
 
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  // Check if powerlevel10k is already installed
+  try {
+    await Deno.stat(`${ctx.home}/.zsh/themes/powerlevel10k`);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   await apt(ctx, ["zsh"]);
 
