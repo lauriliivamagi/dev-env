@@ -9,6 +9,16 @@ import { join } from "@std/path";
 
 const DELTA_VERSION = "0.18.2";
 
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const deltaBin = `${ctx.home}/.local/bin/delta`;
+  try {
+    await Deno.stat(deltaBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const binDir = `${ctx.home}/.local/bin`;
   await fs.mkdir(ctx, binDir);

@@ -2,6 +2,16 @@ import { type TaskContext, fs, log, verify as v } from "../../../src/lib/mod.ts"
 import { curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const chtPath = join(ctx.home, ".local", "bin", "cht.sh");
+  try {
+    await Deno.stat(chtPath);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing cht.sh");
 

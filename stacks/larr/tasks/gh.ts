@@ -9,6 +9,16 @@ import { join } from "@std/path";
 
 const GH_VERSION = "2.83.2";
 
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const ghBin = `${ctx.home}/.local/bin/gh`;
+  try {
+    await Deno.stat(ghBin);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const binDir = `${ctx.home}/.local/bin`;
   await fs.mkdir(ctx, binDir);

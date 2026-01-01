@@ -1,8 +1,13 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
-import { curlPipe } from "../../../src/lib/shell.ts";
+import { checkCommandOutput, curlPipe } from "../../../src/lib/shell.ts";
 
 // Uses mkasberg/ghostty-ubuntu DEB package
 // https://github.com/mkasberg/ghostty-ubuntu
+
+export async function shouldRun(_ctx: TaskContext): Promise<boolean> {
+  const result = await checkCommandOutput(["ghostty", "--version"]);
+  return result.code !== 0;
+}
 
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Ghostty via mkasberg/ghostty-ubuntu");
