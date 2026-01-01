@@ -26,6 +26,17 @@ export async function run(ctx: TaskContext): Promise<void> {
   await shellRun(ctx, ["sudo", "dpkg", "-i", debPath]);
   await runOrFail(ctx, ["sudo", "apt", "install", "-f", "-y"]);
 
+  // Add user to input group (required for Wayland EVDEV access)
+  const user = Deno.env.get("USER") ?? "larr";
+  log.info("Adding user to input group for Wayland keyboard access");
+  await runOrFail(ctx, ["sudo", "usermod", "-aG", "input", user]);
+  log.warn("NOTE: Log out and back in for input group membership to take effect");
+
+  // Register and start espanso systemd service
+  log.info("Registering espanso systemd service");
+  await shellRun(ctx, ["espanso", "service", "register"]);
+  await shellRun(ctx, ["espanso", "service", "start"]);
+
   // Install config from encrypted secrets
   await installConfig(ctx);
 }
