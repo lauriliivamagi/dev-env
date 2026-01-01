@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## First-time Setup
 
 Prerequisites (install if not present):
+
 ```bash
 # System packages
 sudo apt install -y curl git unzip
@@ -97,6 +98,7 @@ docker build -t dev-env-test -f Dockerfile.test . && docker run --rm \
 ```
 
 Key flags explained:
+
 - `zsh -i -l`: Interactive login shell that sources `.zshrc`/`.zsh_profile` for proper PATH setup
 - `REALISTIC_TEST=1`: Uses PATH from shell config instead of hardcoded paths
 - `--privileged`: Required for Docker-in-Docker tasks
@@ -109,6 +111,7 @@ This is a Deno-based development environment manager organized around **stacks**
 ### Stacks
 
 A stack is a complete, isolated dev environment configuration. Each stack has its own:
+
 - `tasks/` - Setup task modules
 - `env/` - Configuration files to sync
 - `secrets/` - Encrypted secrets (SSH keys, etc.)
@@ -130,13 +133,15 @@ Stacks are fully isolated - no sharing between them.
 ### Commands
 
 **`run --stack <name>`** - Discovers and executes task modules from `stacks/<name>/tasks/`. Each task is a TypeScript file exporting:
+
 ```typescript
-export async function run(ctx: TaskContext): Promise<void>
+export async function run(ctx: TaskContext): Promise<void>;
 ```
 
 **`sync --stack <name>`** - Copies configuration files from `stacks/<name>/env/` to the user's home directory (`~/.config/`, `~/.local/`, dotfiles).
 
 ### Key Files
+
 - `src/cli.ts` - CLI entry point, argument parsing
 - `src/commands/run.ts` - Task discovery and execution
 - `src/commands/sync.ts` - Configuration synchronization
@@ -145,7 +150,9 @@ export async function run(ctx: TaskContext): Promise<void>
 - `stacks/<name>/env/` - Stack-specific configuration files
 
 ### TaskContext
+
 All operations receive a `TaskContext` with:
+
 - `dryRun: boolean` - Check before making changes
 - `diff: boolean` - Show diffs for file changes
 - `home: string` - User's home directory
@@ -162,11 +169,12 @@ This codebase uses Tiger Style assertions (`src/lib/assert.ts`) - assertions tha
 ```typescript
 import { assert, unreachable } from "../lib/mod.ts";
 
-assert(value.length > 0, "value cannot be empty");  // Validates preconditions
-unreachable("invalid state");                        // Marks impossible code paths
+assert(value.length > 0, "value cannot be empty"); // Validates preconditions
+unreachable("invalid state"); // Marks impossible code paths
 ```
 
 Use assertions for:
+
 - **Preconditions**: Validate function arguments at entry
 - **Postconditions**: Verify return values and state
 - **Invariants**: Document assumptions that must hold
@@ -175,6 +183,7 @@ Use assertions for:
 ## Adding a New Task
 
 Create `stacks/<stack>/tasks/mytask.ts`:
+
 ```typescript
 import { type TaskContext, assert, log } from "../../../src/lib/mod.ts";
 import { apt, runOrFail } from "../../../src/lib/shell.ts";
@@ -191,9 +200,10 @@ The task will be automatically discovered and can be run with `deno task run -s 
 ### Task Dependencies
 
 Declare dependencies using the `dependsOn` export:
+
 ```typescript
 // stacks/primeagen/tasks/secrets.ts
-export const dependsOn = ["sops"];  // This task requires sops to run first
+export const dependsOn = ["sops"]; // This task requires sops to run first
 
 export async function run(ctx: TaskContext): Promise<void> {
   // sops command is guaranteed to be available
@@ -201,6 +211,7 @@ export async function run(ctx: TaskContext): Promise<void> {
 ```
 
 When running a specific task, its dependencies are automatically included:
+
 ```bash
 deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 ```
@@ -210,6 +221,7 @@ Tasks are sorted topologically (dependencies first), with alphabetical ordering 
 ### Changed Tracking
 
 File operations return `{ changed: boolean }` to indicate if modifications occurred:
+
 ```typescript
 const { changed } = await fs.writeFile(ctx, path, content);
 if (changed) {
@@ -218,6 +230,7 @@ if (changed) {
 ```
 
 Operations skip unchanged files automatically:
+
 - `writeFile()` - skips if content identical
 - `copyFile()` - skips if source/dest match
 - `mkdir()` - skips if directory exists
@@ -226,6 +239,7 @@ Operations skip unchanged files automatically:
 ### Diff Mode
 
 Show file changes before applying with `--diff`:
+
 ```bash
 deno task run -s larr --diff
 deno task sync -s larr --diff
@@ -240,6 +254,7 @@ mkdir -p stacks/mystack/{tasks,env,secrets}
 ```
 
 Add tasks to `stacks/mystack/tasks/`, configs to `stacks/mystack/env/`, etc. Then run:
+
 ```bash
 deno task run -s mystack
 deno task sync -s mystack
@@ -248,6 +263,7 @@ deno task sync -s mystack
 ## Secrets Management
 
 This project uses two tools for secrets:
+
 - **dotenvx** - API tokens (encrypted `.env` file)
 - **SOPS + age** - SSH keys (encrypted YAML files)
 - **gitleaks** - Pre-commit hook to prevent committing plaintext secrets
@@ -282,6 +298,7 @@ deno task run -s primeagen secrets
 API tokens are loaded automatically via `.zsh_profile` when dotenvx is installed.
 
 To update secrets:
+
 ```bash
 # Add new API token
 dotenvx set NEW_API_KEY "value"
@@ -294,12 +311,14 @@ deno task run -s primeagen secrets           # Re-install keys
 ### Sharing Secrets
 
 Share your age private key and dotenvx private key securely (1Password, Signal, etc.):
+
 - Age key: `~/.config/sops/age/keys.txt`
 - Dotenvx key: Value of `DOTENV_PRIVATE_KEY` from `.env.keys`
 
 ## Documentation
 
 See `docs/` for detailed documentation:
+
 - `docs/index.md` - Documentation overview
 - `docs/how-to/manage-secrets.md` - Complete secrets management guide
 - `docs/reference/` - API reference for utilities
