@@ -5,8 +5,12 @@ import { checkCommandOutput, curlPipe } from "../../../src/lib/shell.ts";
 // https://github.com/mkasberg/ghostty-ubuntu
 
 export async function shouldRun(_ctx: TaskContext): Promise<boolean> {
-  const result = await checkCommandOutput(["ghostty", "--version"]);
-  return result.code !== 0;
+  try {
+    const result = await checkCommandOutput(["ghostty", "--version"]);
+    return result.code !== 0;
+  } catch {
+    return true; // Command not found
+  }
 }
 
 export async function run(ctx: TaskContext): Promise<void> {
