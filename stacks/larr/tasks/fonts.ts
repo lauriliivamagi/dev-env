@@ -32,6 +32,17 @@ const FONT_SOURCES: FontSource[] = [
   },
 ];
 
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  const fontsDir = join(ctx.home, ".local", "share", "fonts");
+  // Check if all font families are installed
+  for (const font of FONT_SOURCES) {
+    if (!await exists(join(fontsDir, font.name))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing fonts");
 
