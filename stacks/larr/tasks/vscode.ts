@@ -122,24 +122,37 @@ export async function run(ctx: TaskContext): Promise<void> {
   // Install dependencies (wget and gnupg needed for GPG key setup)
   await apt(ctx, ["apt-transport-https", "wget", "gnupg"]);
 
-  // Add Microsoft GPG key (use microsoft.gpg to match existing MS repos)
-  log.info("Adding Microsoft GPG key");
-  await runOrFail(ctx, [
-    "bash",
-    "-c",
-    "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null",
-  ]);
+  // Check if VS Code repo already exists (deb822 format from previous install)
+  let repoExists = false;
+  try {
+    await Deno.stat("/etc/apt/sources.list.d/vscode.sources");
+    repoExists = true;
+    log.info("VS Code repository already configured");
+  } catch {
+    // No existing repo, need to add it
+  }
 
-  // Add VS Code repository
-  log.info("Adding VS Code repository");
-  await runOrFail(ctx, [
-    "bash",
-    "-c",
-    'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list',
-  ]);
+  if (!repoExists) {
+    // Add Microsoft GPG key (use microsoft.gpg to match existing MS repos)
+    log.info("Adding Microsoft GPG key");
+    await runOrFail(ctx, [
+      "bash",
+      "-c",
+      "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null",
+    ]);
 
-  // Update and install
-  await runOrFail(ctx, ["sudo", "apt", "update"]);
+    // Add VS Code repository
+    log.info("Adding VS Code repository");
+    await runOrFail(ctx, [
+      "bash",
+      "-c",
+      'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list',
+    ]);
+
+    // Update apt after adding repo
+    await runOrFail(ctx, ["sudo", "apt", "update"]);
+  }
+
   await apt(ctx, ["code-insiders"]);
 
   log.success("VS Code Insiders installed");
