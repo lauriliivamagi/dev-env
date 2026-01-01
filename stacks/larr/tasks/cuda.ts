@@ -6,6 +6,15 @@ const CUDA_PIN_URL =
 const CUDA_DEB_URL =
   "https://developer.download.nvidia.com/compute/cuda/13.1.0/local_installers/cuda-repo-ubuntu2404-13-1-local_13.1.0-590.44.01-1_amd64.deb";
 
+export async function shouldRun(_ctx: TaskContext): Promise<boolean> {
+  try {
+    await Deno.stat("/usr/local/cuda-13.1/bin/nvcc");
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   const pinPath = "/tmp/cuda-ubuntu2404.pin";
   const debPath = "/tmp/cuda-repo.deb";
