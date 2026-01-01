@@ -1,6 +1,18 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
 import { apt, curl, runOrFail } from "../../../src/lib/shell.ts";
 
+export async function shouldRun(_ctx: TaskContext): Promise<boolean> {
+  // Check for non-idempotent installs (zerotier, bitwarden)
+  // apt packages are idempotent so we only need to check these
+  try {
+    await Deno.stat("/usr/sbin/zerotier-cli");
+    await Deno.stat("/usr/bin/bitwarden");
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   // ========================================
   // Packages from standard Ubuntu 25.10 repos
