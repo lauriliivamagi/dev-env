@@ -1,6 +1,16 @@
 import { type TaskContext, log, verify as v } from "../../../src/lib/mod.ts";
 import { curlPipe, runOrFail } from "../../../src/lib/shell.ts";
 
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  // Check if pnpm is installed via volta (means full setup is done)
+  try {
+    await Deno.stat(`${ctx.home}/.volta/tools/image/pnpm`);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing Volta");
   await curlPipe(ctx, "https://get.volta.sh", ["bash"], { skipIfCommand: "volta" });
