@@ -138,6 +138,15 @@ export async function checkCommandOutput(
   };
 }
 
+/**
+ * Check if a command exists in PATH.
+ * Pure utility function that doesn't depend on TaskContext.
+ */
+export async function commandExists(cmd: string): Promise<boolean> {
+  const result = await checkCommandOutput(["which", cmd]);
+  return result.code === 0;
+}
+
 export async function apt(ctx: TaskContext, packages: string[]): Promise<void> {
   assert(packages.length > 0, "packages array cannot be empty");
   await runOrFail(ctx, [
@@ -163,11 +172,13 @@ export async function gitClone(
   assert(url.length > 0, "git clone url cannot be empty");
   assert(dest.length > 0, "git clone destination cannot be empty");
 
-  const cmd = ["git", "clone"];
-  if (opts.branch) {
-    cmd.push("-b", opts.branch);
-  }
-  cmd.push(url, dest);
+  const cmd = [
+    "git",
+    "clone",
+    ...(opts.branch ? ["-b", opts.branch] : []),
+    url,
+    dest,
+  ];
   await runOrFail(ctx, cmd);
 }
 
@@ -266,17 +277,9 @@ export async function curlPipe(
 
   // Check if we should skip because command already exists
   // Check even in dry-run mode to accurately reflect what would happen
-  if (opts.skipIfCommand) {
-    // Use a non-dry-run context to actually check if command exists
-    const checkCtx = { ...ctx, dryRun: false };
-    const which = await run(checkCtx, ["which", opts.skipIfCommand], {
-      stdout: "piped",
-      stderr: "piped",
-    });
-    if (which.code === 0) {
-      log.skip(`${opts.skipIfCommand} already installed`);
-      return { skipped: true };
-    }
+  if (opts.skipIfCommand && await commandExists(opts.skipIfCommand)) {
+    log.skip(`${opts.skipIfCommand} already installed`);
+    return { skipped: true };
   }
 
   const shellDisplay = shell.join(" ");
@@ -325,21 +328,29 @@ export async function curlPipe(
   return { skipped: false };
 }
 
+/**
+ * Find pnpm executable path.
+ * Returns the path if found, null if not installed.
+ */
+async function findPnpm(home: string): Promise<string | null> {
+  if (await commandExists("pnpm")) {
+    return "pnpm";
+  }
+  const voltaPnpm = `${home}/.volta/bin/pnpm`;
+  try {
+    await Deno.stat(voltaPnpm);
+    return voltaPnpm;
+  } catch {
+    return null;
+  }
+}
+
 export async function pnpm(ctx: TaskContext, args: string[]): Promise<void> {
-  // Try to find pnpm - either in PATH or via Volta
-  let pnpmCmd = "pnpm";
-  if (!ctx.dryRun) {
-    const which = await run(ctx, ["which", "pnpm"], { stdout: "piped", stderr: "piped" });
-    if (which.code !== 0) {
-      const voltaPnpm = `${ctx.home}/.volta/bin/pnpm`;
-      try {
-        await Deno.stat(voltaPnpm);
-        pnpmCmd = voltaPnpm;
-      } catch {
-        log.warn("pnpm not installed, skipping");
-        return;
-      }
-    }
+  // In dry-run mode, assume pnpm is available
+  const pnpmCmd = ctx.dryRun ? "pnpm" : await findPnpm(ctx.home);
+  if (!pnpmCmd) {
+    log.warn("pnpm not installed, skipping");
+    return;
   }
 
   // Set PNPM_HOME and PATH for global installs to work
@@ -354,6 +365,23 @@ export async function pnpm(ctx: TaskContext, args: string[]): Promise<void> {
   await runOrFail(ctx, [pnpmCmd, ...args], { env });
 }
 
+/**
+ * Find cargo executable path.
+ * Returns the path if found, null if not installed.
+ */
+async function findCargo(home: string): Promise<string | null> {
+  if (await commandExists("cargo")) {
+    return "cargo";
+  }
+  const userCargo = `${home}/.cargo/bin/cargo`;
+  try {
+    await Deno.stat(userCargo);
+    return userCargo;
+  } catch {
+    return null;
+  }
+}
+
 export async function cargoInstall(
   ctx: TaskContext,
   pkg: string,
@@ -361,38 +389,29 @@ export async function cargoInstall(
 ): Promise<void> {
   assert(pkg.length > 0, "cargo package name cannot be empty");
 
-  // Try to find cargo - either in PATH or in user's .cargo/bin
-  let cargo = "cargo";
-  if (!ctx.dryRun) {
-    const which = await run(ctx, ["which", "cargo"], { stdout: "piped", stderr: "piped" });
-    if (which.code !== 0) {
-      const userCargo = `${ctx.home}/.cargo/bin/cargo`;
-      try {
-        await Deno.stat(userCargo);
-        cargo = userCargo;
-      } catch {
-        log.warn(`Cargo not installed, skipping: ${pkg}`);
-        return;
-      }
-    }
+  // In dry-run mode, assume cargo is available
+  const cargo = ctx.dryRun ? "cargo" : await findCargo(ctx.home);
+  if (!cargo) {
+    log.warn(`Cargo not installed, skipping: ${pkg}`);
+    return;
   }
 
-  const cmd = [cargo, "install", pkg];
-  if (opts.features?.length) {
-    cmd.push("--features", opts.features.join(","));
-  }
+  const cmd = [
+    cargo,
+    "install",
+    pkg,
+    ...(opts.features?.length ? ["--features", opts.features.join(",")] : []),
+  ];
   await runOrFail(ctx, cmd);
 }
 
 export async function goInstall(ctx: TaskContext, pkg: string): Promise<void> {
   assert(pkg.length > 0, "go package name cannot be empty");
 
-  if (!ctx.dryRun) {
-    const which = await run(ctx, ["which", "go"], { stdout: "piped", stderr: "piped" });
-    if (which.code !== 0) {
-      log.warn(`Go not installed, skipping: ${pkg}`);
-      return;
-    }
+  // In dry-run mode, assume go is available
+  if (!ctx.dryRun && !await commandExists("go")) {
+    log.warn(`Go not installed, skipping: ${pkg}`);
+    return;
   }
 
   await runOrFail(ctx, ["go", "install", pkg]);
