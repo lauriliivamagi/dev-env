@@ -42,17 +42,8 @@ Deno.test("getContext - respects dryRun and diff flags", async () => {
   assertEquals(ctx.diff, true);
 });
 
-Deno.test("getContext - loads vars from stack vars.ts", async () => {
-  // larr stack has a vars.ts file
-  const ctx = await getContext({ stack: "larr" });
-  assertEquals(typeof ctx.vars, "object");
-  // Check for a known variable from stacks/larr/vars.ts
-  assertEquals(ctx.vars.goVersion, "1.23.4");
-});
-
 Deno.test("getContext - returns empty vars for stack without vars.ts", async () => {
-  // primeagen stack doesn't have vars.ts
-  const ctx = await getContext({ stack: "primeagen" });
+  const ctx = await getContext({ stack: "larr" });
   assertEquals(typeof ctx.vars, "object");
   assertEquals(Object.keys(ctx.vars).length, 0);
 });

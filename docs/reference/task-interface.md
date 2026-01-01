@@ -50,7 +50,7 @@ export interface TaskContext {
 | `configHome` | `string` | XDG config directory (`$XDG_CONFIG_HOME` or `~/.config`) |
 | `stack` | `string` | Active stack name (e.g., "primeagen", "larr") |
 | `stackRoot` | `string` | Absolute path to active stack directory |
-| `vars` | `Record<string, string>` | Stack variables from `vars.ts` |
+| `vars` | `Record<string, string>` | Stack variables (empty unless stack has `vars.ts`) |
 
 ### Getting Context
 
@@ -63,30 +63,7 @@ const ctx = await getContext({ dryRun: false, diff: false, stack: "primeagen" })
 // ctx.configHome = "/home/username/.config"
 // ctx.stack = "primeagen"
 // ctx.stackRoot = "/path/to/dev-env/stacks/primeagen"
-// ctx.vars = { goVersion: "1.23.4", ... }  // From stacks/primeagen/vars.ts
-```
-
-### Stack Variables
-
-Define stack-wide variables in `stacks/<stack>/vars.ts`:
-
-```typescript
-// stacks/larr/vars.ts
-export const vars: Record<string, string> = {
-  goVersion: "1.23.4",
-  zigVersion: "0.15.2",
-  gitName: "Your Name",
-  gitEmail: "you@example.com",
-};
-```
-
-Access in tasks via `ctx.vars`:
-
-```typescript
-export async function run(ctx: TaskContext): Promise<void> {
-  const version = ctx.vars.goVersion ?? "1.23.4";  // Fallback if not defined
-  log.info(`Installing Go ${version}`);
-}
+// ctx.vars = {}  // Empty unless stack has vars.ts
 ```
 
 ## Task File Structure

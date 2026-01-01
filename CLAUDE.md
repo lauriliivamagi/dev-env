@@ -153,7 +153,7 @@ All operations receive a `TaskContext` with:
 - `configHome: string` - XDG config home (~/.config)
 - `stack: string` - Active stack name
 - `stackRoot: string` - Path to active stack directory
-- `vars: Record<string, string>` - Stack variables from `vars.ts`
+- `vars: Record<string, string>` - Stack variables (empty unless stack has `vars.ts`)
 
 ## Tiger Style Assertions
 
@@ -206,24 +206,6 @@ deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 ```
 
 Tasks are sorted topologically (dependencies first), with alphabetical ordering for independent tasks. Circular dependencies are detected and cause an error.
-
-### Stack Variables
-
-Define stack-wide variables in `stacks/<stack>/vars.ts`:
-```typescript
-export const vars: Record<string, string> = {
-  goVersion: "1.23.4",
-  gitName: "Your Name",
-  gitEmail: "you@example.com",
-};
-```
-
-Access in tasks via `ctx.vars`:
-```typescript
-export async function run(ctx: TaskContext): Promise<void> {
-  const version = ctx.vars.goVersion ?? "1.23.4";  // Fallback if not defined
-}
-```
 
 ### Changed Tracking
 
