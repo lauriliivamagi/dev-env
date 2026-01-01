@@ -167,7 +167,9 @@ SNIPPETS_DIR="${snippetsDir}"
 # List snippets, let user pick with fzf
 selected=$(ls -1 "$SNIPPETS_DIR"/*.txt 2>/dev/null | \\
   xargs -I{} basename {} .txt | \\
-  fzf --prompt="Snippet: " --reverse --border)
+  fzf --prompt="Snippet: " --reverse --border \\
+      --preview "cat $SNIPPETS_DIR/{}.txt" \\
+      --preview-window=right:50%:wrap:border-left)
 
 # Copy snippet content to clipboard
 if [[ -n "$selected" ]]; then
