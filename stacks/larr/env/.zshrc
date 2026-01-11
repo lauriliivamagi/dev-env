@@ -114,7 +114,7 @@ export PATH="$HOME/.turso:$PATH"
 
 # Load API keys from dotenvx (encrypted in ~/git/larr-dev-env/.env)
 if command -v dotenvx &> /dev/null && [ -f "$HOME/git/larr-dev-env/.env" ]; then
-  eval "$(dotenvx get --format shell 2>/dev/null)"
+  eval "$(dotenvx get -f "$HOME/git/larr-dev-env/.env" --format shell 2>/dev/null)"
 fi
 
 # Cognee LLM settings (API keys loaded from dotenvx above)
