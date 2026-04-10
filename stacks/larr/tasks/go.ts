@@ -2,7 +2,7 @@ import { type TaskContext, fs, log, verify as v } from "../../../src/lib/mod.ts"
 import { checkCommandOutput, curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const GO_VERSION = "1.23.4";
+const GO_VERSION = "1.26.2";
 
 /**
  * Compare two semver version strings.
