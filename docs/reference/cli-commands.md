@@ -63,10 +63,7 @@ deno task sync:primeagen
 **What gets synced:**
 - `stacks/<name>/env/.config/*` → `~/.config/`
 - `stacks/<name>/env/.local/*` → `~/.local/`
-- `stacks/<name>/env/.zshrc` → `~/.zshrc`
-- `stacks/<name>/env/.zsh_profile` → `~/.zsh_profile`
-- `stacks/<name>/env/.xprofile` → `~/.xprofile`
-- `stacks/<name>/env/.tmux-sessionizer` → `~/.tmux-sessionizer`
+- Any other dotfile or dotdir in `stacks/<name>/env/` starting with `.` → `~/` (discovered dynamically)
 
 ## Options
 

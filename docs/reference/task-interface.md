@@ -10,6 +10,8 @@ export interface Task {
   name: string;
   run: (ctx: TaskContext) => Promise<void>;
   verify?: (ctx: TaskContext) => Promise<void>;
+  /** Optional pre-check to skip task if already satisfied */
+  shouldRun?: (ctx: TaskContext) => Promise<boolean>;
   dependsOn: string[];
 }
 ```
@@ -21,6 +23,7 @@ export interface Task {
 | `name` | `string` | Yes | Task name (derived from filename) |
 | `run` | `(ctx: TaskContext) => Promise<void>` | Yes | Main execution function |
 | `verify` | `(ctx: TaskContext) => Promise<void>` | No | Post-execution verification |
+| `shouldRun` | `(ctx: TaskContext) => Promise<boolean>` | No | Pre-check to skip if already satisfied |
 | `dependsOn` | `string[]` | No | Tasks that must run before this one |
 
 ## TaskContext
@@ -110,6 +113,36 @@ export async function run(ctx: TaskContext): Promise<void> {
   // The sops task will automatically run first
 }
 ```
+
+### With Conditional Execution
+
+Skip tasks that are already satisfied using the `shouldRun` export:
+
+```typescript
+// stacks/larr/tasks/example.ts
+import { type TaskContext } from "../../../src/lib/mod.ts";
+import { commandExists } from "../../../src/lib/shell.ts";
+
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  // Return false to skip this task
+  return !await commandExists("example");
+}
+
+export async function run(ctx: TaskContext): Promise<void> {
+  // Only runs if shouldRun returned true
+}
+
+export async function verify(ctx: TaskContext): Promise<void> {
+  // Still runs even when task is skipped, to confirm it's satisfied
+  await v.assertCommand("example", "--version");
+}
+```
+
+When `shouldRun` returns `false`:
+
+1. The `run()` function is skipped
+2. The `verify()` function still runs (to confirm the task is truly satisfied)
+3. The task is logged as skipped
 
 **Dependency Resolution:**
 
@@ -230,6 +263,7 @@ export async function discoverTasks(
       name: taskName,
       run: mod.run,
       verify: typeof mod.verify === "function" ? mod.verify : undefined,
+      shouldRun: typeof mod.shouldRun === "function" ? mod.shouldRun : undefined,
       dependsOn: Array.isArray(mod.dependsOn) ? mod.dependsOn : [],
     });
   }
@@ -245,6 +279,7 @@ export async function discoverTasks(
 4. Tasks without dependencies maintain alphabetical order among themselves
 5. For each task in order:
    - Log task name
+   - If `shouldRun` exists and returns `false`, run `verify()` then skip
    - Call `task.run(ctx)`
    - If not dry run and verify exists, call `task.verify(ctx)`
    - Log success
@@ -257,6 +292,18 @@ const tasksToRun = resolveDependencies(taskNodes);
 for (const name of tasksToRun) {
   const task = taskMap.get(name)!;
   log.task(task.name);
+
+  if (task.shouldRun) {
+    const should = await task.shouldRun(ctx);
+    if (!should) {
+      if (!ctx.dryRun && task.verify) {
+        await task.verify(ctx);
+      }
+      log.skip(`${task.name} (already satisfied)`);
+      continue;
+    }
+  }
+
   try {
     await task.run(ctx);
 

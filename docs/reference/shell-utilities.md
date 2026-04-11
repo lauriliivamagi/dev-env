@@ -71,6 +71,40 @@ await runOrFail(ctx, ["make", "install"]);
 // Throws if make fails
 ```
 
+### checkCommandOutput()
+
+Run a command and return its output. Bypasses dry-run mode (useful for `shouldRun` checks).
+
+```typescript
+async function checkCommandOutput(
+  cmd: string[],
+  opts?: RunOptions,
+): Promise<{ code: number; stdout?: string; stderr?: string }>
+```
+
+**Example:**
+```typescript
+const result = await checkCommandOutput(["go", "version"], { stdout: "piped" });
+if (result.code === 0) {
+  console.log(result.stdout); // "go version go1.26.2 linux/amd64"
+}
+```
+
+### commandExists()
+
+Check if a command exists in PATH.
+
+```typescript
+async function commandExists(cmd: string): Promise<boolean>
+```
+
+**Example:**
+```typescript
+if (await commandExists("cargo")) {
+  await cargoInstall(ctx, "ripgrep");
+}
+```
+
 ## Package Managers
 
 ### apt()
@@ -236,6 +270,31 @@ async function gitCheckout(
 await gitCheckout(ctx, "v0.9.5", `${ctx.home}/repos/neovim`);
 ```
 
+### gitCloneOrPull()
+
+Clone a repository, or pull if it already exists. Idempotent.
+
+```typescript
+async function gitCloneOrPull(
+  ctx: TaskContext,
+  url: string,
+  dest: string,
+  opts?: { branch?: string },
+): Promise<{ cloned: boolean }>
+```
+
+**Returns:** `{ cloned: true }` if freshly cloned, `{ cloned: false }` if pulled.
+
+**Example:**
+```typescript
+const { cloned } = await gitCloneOrPull(
+  ctx,
+  "https://github.com/neovim/neovim",
+  `${ctx.home}/repos/neovim`,
+  { branch: "stable" },
+);
+```
+
 ## Download Operations
 
 ### curl()
@@ -273,31 +332,43 @@ await curl(
 Download and pipe to a shell. Supports compound shell commands with arguments.
 
 ```typescript
+interface CurlPipeOptions {
+  /** Skip execution if this command already exists in PATH */
+  skipIfCommand?: string;
+}
+
 async function curlPipe(
   ctx: TaskContext,
   url: string,
-  shell?: string,  // Defaults to "sh"
-): Promise<void>
+  shell: string[] = ["sh"],
+  opts: CurlPipeOptions = {},
+): Promise<{ skipped: boolean }>
 ```
 
 **Example:**
 ```typescript
 // Install rustup (non-interactive mode)
-await curlPipe(ctx, "https://sh.rustup.rs", "sh -s -- -y");
+await curlPipe(ctx, "https://sh.rustup.rs", ["sh", "-s", "--", "-y"]);
 // Runs: curl -fsSL https://sh.rustup.rs | sh -s -- -y
 
 // With bash
-await curlPipe(ctx, "https://example.com/install.sh", "bash");
+await curlPipe(ctx, "https://example.com/install.sh", ["bash"]);
 // Runs: curl -fsSL https://example.com/install.sh | bash
 
 // With sudo (for system-wide installation)
-await curlPipe(ctx, "https://dotenvx.sh", "sudo sh");
+await curlPipe(ctx, "https://dotenvx.sh", ["sudo", "sh"]);
 // Runs: curl -fsSL https://dotenvx.sh | sudo sh
+
+// Skip if already installed
+await curlPipe(ctx, "https://dotenvx.sh", ["sudo", "sh"], {
+  skipIfCommand: "dotenvx",
+});
+// Returns { skipped: true } if dotenvx is already in PATH
 ```
 
-**Safety:** Asserts that curl returns non-empty content before piping.
+**Returns:** `{ skipped: true }` if the command from `skipIfCommand` already exists in PATH, `{ skipped: false }` otherwise.
 
-**Note:** The shell argument is split on spaces, so `"sh -s -- -y"` becomes command `sh` with args `["-s", "--", "-y"]`.
+**Safety:** Asserts that curl returns non-empty content before piping.
 
 ## Dry Run Behavior
 

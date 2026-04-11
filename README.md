@@ -26,7 +26,7 @@ deno task sync -s larr    # or: deno task sync -s primeagen
 Every tool installed. Every config in place. Every machine identical.
 
 **Available stacks:**
-- `larr` - Modern development stack (32 tasks)
+- `larr` - Modern development stack (39 tasks)
 - `primeagen` - ThePrimeagen-inspired stack (29 tasks)
 
 ## What You Get
@@ -83,7 +83,7 @@ Secrets are encrypted and safe to commit:
 
 ```bash
 # Install encryption tools
-deno task run sops dotenvx gitleaks git-hooks
+deno task run -s <stack> sops dotenvx gitleaks git-hooks
 
 # API tokens (dotenvx)
 cp .env.example .env
@@ -91,11 +91,11 @@ cp .env.example .env
 dotenvx encrypt
 
 # SSH keys (SOPS + age)
-sops secrets/ssh.enc.yaml
-deno task run secrets
+sops stacks/<stack>/secrets/ssh.enc.yaml
+deno task run -s <stack> secrets
 ```
 
-See [Managing Secrets](docs/how-to/manage-secrets.md) for the complete guide.
+See [Managing Secrets](docs/how-to/manage-secrets.md) for details.
 
 ## Documentation
 

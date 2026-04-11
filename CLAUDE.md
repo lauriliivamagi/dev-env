@@ -145,7 +145,7 @@ export async function run(ctx: TaskContext): Promise<void>;
 - `src/cli.ts` - CLI entry point, argument parsing
 - `src/commands/run.ts` - Task discovery and execution
 - `src/commands/sync.ts` - Configuration synchronization
-- `src/lib/` - Shared utilities (shell, fs, logging, config, assert)
+- `src/lib/` - Shared utilities (shell, fs, logging, config, assert, verify, deps)
 - `stacks/<name>/tasks/` - Stack-specific setup tasks (auto-discovered)
 - `stacks/<name>/env/` - Stack-specific configuration files
 
@@ -189,7 +189,7 @@ import { type TaskContext, assert, log } from "../../../src/lib/mod.ts";
 import { apt, runOrFail } from "../../../src/lib/shell.ts";
 
 export async function run(ctx: TaskContext): Promise<void> {
-  // Shell utilities: apt(), pnpm(), cargoInstall(), gitClone(), curlPipe()
+  // Shell utilities: apt(), pnpm(), cargoInstall(), goInstall(), gitClone(), curlPipe()
   // File utilities: fs.copyFile(), fs.copyDir(), fs.mkdir(), fs.remove(), fs.writeFile()
   // All lib functions handle ctx.dryRun internally
 }
@@ -217,6 +217,21 @@ deno task run -s primeagen secrets  # Automatically runs: sops → secrets
 ```
 
 Tasks are sorted topologically (dependencies first), with alphabetical ordering for independent tasks. Circular dependencies are detected and cause an error.
+
+### Conditional Execution
+
+Tasks can export a `shouldRun` function to skip execution when already satisfied:
+
+```typescript
+import { commandExists } from "../../../src/lib/shell.ts";
+
+export async function shouldRun(ctx: TaskContext): Promise<boolean> {
+  // Return false to skip this task
+  return !await commandExists("mytool");
+}
+```
+
+When `shouldRun` returns `false`, the task is skipped but `verify()` still runs to confirm it's truly satisfied.
 
 ### Changed Tracking
 
