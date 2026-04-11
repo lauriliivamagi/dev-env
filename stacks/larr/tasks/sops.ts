@@ -3,7 +3,7 @@ import { curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
 const AGE_VERSION = "1.3.1";
-const SOPS_VERSION = "3.11.0";
+const SOPS_VERSION = "3.12.2";
 
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const sopsBin = `${ctx.home}/.local/bin/sops`;

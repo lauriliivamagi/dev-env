@@ -2,7 +2,7 @@ import { type TaskContext, fs, log, verify as v } from "../../../src/lib/mod.ts"
 import { apt, curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const ZIG_VERSION = "0.15.2";
+const ZIG_VERSION = "0.16.0";
 
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const zigBin = join(ctx.home, ".local", "bin", "zig");

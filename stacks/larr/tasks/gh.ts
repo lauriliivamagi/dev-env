@@ -7,7 +7,7 @@ import {
 import { curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const GH_VERSION = "2.83.2";
+const GH_VERSION = "2.89.0";
 
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const ghBin = `${ctx.home}/.local/bin/gh`;

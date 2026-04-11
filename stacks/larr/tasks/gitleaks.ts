@@ -2,7 +2,7 @@ import { type TaskContext, fs, log, verify as v } from "../../../src/lib/mod.ts"
 import { curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const GITLEAKS_VERSION = "8.30.0";
+const GITLEAKS_VERSION = "8.30.1";
 
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const gitleaksBin = `${ctx.home}/.local/bin/gitleaks`;

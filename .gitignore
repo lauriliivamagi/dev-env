@@ -9,6 +9,9 @@ secrets/*.yaml
 !secrets/*.enc.yaml
 !secrets/*.enc.yaml.example
 
+# Firecrawl cache
+.firecrawl/
+
 # Build artifacts
 /target/
 /dist/

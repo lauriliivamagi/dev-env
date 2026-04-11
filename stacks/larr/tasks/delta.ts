@@ -7,7 +7,7 @@ import {
 import { curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const DELTA_VERSION = "0.18.2";
+const DELTA_VERSION = "0.19.2";
 
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const deltaBin = `${ctx.home}/.local/bin/delta`;

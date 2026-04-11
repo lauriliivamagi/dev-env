@@ -7,7 +7,7 @@ import {
 import { checkCommandOutput, curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const LAZYGIT_VERSION = "0.57.0";
+const LAZYGIT_VERSION = "0.61.0";
 
 /**
  * Compare two semver version strings.
