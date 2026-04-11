@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Deno](https://img.shields.io/badge/Deno-2.x-000000?logo=deno)](https://deno.land)
-[![CodeQL](https://github.com/lauriliivamagi/dev-env/actions/workflows/codeql.yml/badge.svg)](https://github.com/lauriliivamagi/dev-env/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/lauriliivamagi/dev-env/actions/workflows/codeql/badge.svg)](https://github.com/lauriliivamagi/dev-env/actions?query=workflow%3ACodeQL)
 
 A Deno-based development environment manager.
 
