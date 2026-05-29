@@ -85,10 +85,7 @@ async function resolveRepoCodename(): Promise<string> {
 export async function run(ctx: TaskContext): Promise<void> {
   log.info("Installing ZeroTier One");
 
-  // Prerequisites: curl to fetch the key, gnupg for `gpg --dearmor`.
-  await runOrFail(ctx, ["sudo", "apt", "update"]);
-  await apt(ctx, ["curl", "ca-certificates", "gnupg"]);
-
+  // curl and gnupg (for `gpg --dearmor`) come from the dev-utils task.
   const codename = await resolveRepoCodename();
 
   // Add ZeroTier's official (ASCII-armored) GPG key, dearmored into a keyring.
