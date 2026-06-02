@@ -131,6 +131,20 @@ command -v pyenv &>/dev/null && eval "$(pyenv init -)"
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
 
+# Infisical (self-hosted default; per-project .infisical.json / --domain overrides)
+export INFISICAL_API_URL="http://localhost:8654/"
+
+# Edge.js
+export EDGEJS_HOME="$HOME/.edgejs"
+export PATH="$EDGEJS_HOME/bin:$PATH"
+
+# Wasmer
+export WASMER_DIR="$HOME/.wasmer"
+[ -s "$WASMER_DIR/wasmer.sh" ] && source "$WASMER_DIR/wasmer.sh"
+
+# Resend CLI
+export PATH="$HOME/.resend/bin:$PATH"
+
 # Local bin and scripts
 export PATH="$HOME/.local/bin:$HOME/.local/scripts:$PATH"
 export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
