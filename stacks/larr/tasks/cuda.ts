@@ -4,11 +4,11 @@ import { apt, aptUpdate, curl, runOrFail } from "../../../src/lib/shell.ts";
 const CUDA_PIN_URL =
   "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin";
 const CUDA_DEB_URL =
-  "https://developer.download.nvidia.com/compute/cuda/13.2.0/local_installers/cuda-repo-ubuntu2404-13-2-local_13.2.0-595.45.04-1_amd64.deb";
+  "https://developer.download.nvidia.com/compute/cuda/13.3.0/local_installers/cuda-repo-ubuntu2404-13-3-local_13.3.0-610.43.02-1_amd64.deb";
 
 export async function shouldRun(_ctx: TaskContext): Promise<boolean> {
   try {
-    await Deno.stat("/usr/local/cuda-13.2/bin/nvcc");
+    await Deno.stat("/usr/local/cuda-13.3/bin/nvcc");
     return false;
   } catch {
     return true;
@@ -41,17 +41,17 @@ export async function run(ctx: TaskContext): Promise<void> {
   await runOrFail(ctx, [
     "bash",
     "-c",
-    "sudo cp /var/cuda-repo-ubuntu2404-13-2-local/cuda-*-keyring.gpg /usr/share/keyrings/",
+    "sudo cp /var/cuda-repo-ubuntu2404-13-3-local/cuda-*-keyring.gpg /usr/share/keyrings/",
   ]);
 
   // 5. apt update & install cuda-toolkit
   await aptUpdate(ctx);
-  await apt(ctx, ["cuda-toolkit-13-2"]);
+  await apt(ctx, ["cuda-toolkit-13-3"]);
 
-  log.success("CUDA Toolkit 13.2 installed");
+  log.success("CUDA Toolkit 13.3 installed");
 }
 
 export async function verify(_ctx: TaskContext): Promise<void> {
-  await v.assertDir("/usr/local/cuda-13.2");
-  await v.assertFile("/usr/local/cuda-13.2/bin/nvcc");
+  await v.assertDir("/usr/local/cuda-13.3");
+  await v.assertFile("/usr/local/cuda-13.3/bin/nvcc");
 }

@@ -1,5 +1,6 @@
 import {
   type TaskContext,
+  compareVersions,
   fs,
   log,
   verify as v,
@@ -7,23 +8,7 @@ import {
 import { checkCommandOutput, curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const LAZYGIT_VERSION = "0.61.0";
-
-/**
- * Compare two semver version strings.
- * Returns: -1 if a < b, 0 if a === b, 1 if a > b
- */
-function compareVersions(a: string, b: string): number {
-  const partsA = a.split(".").map(Number);
-  const partsB = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-    const numA = partsA[i] ?? 0;
-    const numB = partsB[i] ?? 0;
-    if (numA < numB) return -1;
-    if (numA > numB) return 1;
-  }
-  return 0;
-}
+const LAZYGIT_VERSION = "0.62.1";
 
 /**
  * Check if lazygit needs to be installed or upgraded.

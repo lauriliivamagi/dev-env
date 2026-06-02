@@ -22,8 +22,12 @@ const FONT_SOURCES: FontSource[] = [
   },
   {
     name: "Roboto",
-    url: "https://github.com/googlefonts/roboto/releases/download/v2.138/roboto-android.zip",
-    ttfPath: "",
+    // googlefonts/roboto was archived; the live font lives in roboto-3-classic.
+    // The zip nests variants (android/chromeos/hinted/unhinted/web); scope to
+    // the hinted set (variable font + static weights) so copyTtfFiles doesn't
+    // also descend into the zip's __MACOSX/ AppleDouble junk at the root.
+    url: "https://github.com/googlefonts/roboto-3-classic/releases/download/v3.015/Roboto_v3.015.zip",
+    ttfPath: "hinted",
   },
   {
     name: "Meslo",
@@ -107,6 +111,9 @@ async function copyTtfFiles(
   let count = 0;
 
   for await (const entry of Deno.readDir(srcDir)) {
+    // Skip macOS AppleDouble resource forks (._Foo.ttf) found in some zips.
+    if (entry.name.startsWith("._")) continue;
+
     const srcPath = join(srcDir, entry.name);
 
     if (entry.isDirectory) {

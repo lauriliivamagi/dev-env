@@ -1,22 +1,41 @@
 import {
   type TaskContext,
+  compareVersions,
   fs,
   log,
   verify as v,
 } from "../../../src/lib/mod.ts";
-import { curl, runOrFail } from "../../../src/lib/shell.ts";
+import { checkCommandOutput, curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
-const GH_VERSION = "2.89.0";
+const GH_VERSION = "2.93.0";
 
+/**
+ * Check if gh needs to be installed or upgraded.
+ * Returns true if task should run, false if the installed version is current.
+ */
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const ghBin = `${ctx.home}/.local/bin/gh`;
   try {
     await Deno.stat(ghBin);
-    return false;
   } catch {
-    return true;
+    return true; // gh not installed
   }
+
+  const result = await checkCommandOutput([ghBin, "--version"]);
+  if (result.code !== 0) return true;
+
+  // Parse version: "gh version 2.93.0 (2026-05-27)"
+  const match = result.stdout?.match(/gh version (\d+\.\d+\.\d+)/);
+  const installedVersion = match?.[1];
+  if (!installedVersion) return true; // couldn't parse, run to be safe
+
+  if (compareVersions(installedVersion, GH_VERSION) >= 0) {
+    return false; // installed version is equal or newer
+  }
+
+  log.info(`gh ${installedVersion} installed, upgrading to ${GH_VERSION}`);
+  return true;
 }
 
 export async function run(ctx: TaskContext): Promise<void> {

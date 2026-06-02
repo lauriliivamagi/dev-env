@@ -1,18 +1,43 @@
-import { type TaskContext, fs, log, verify as v } from "../../../src/lib/mod.ts";
-import { curl, runOrFail } from "../../../src/lib/shell.ts";
+import {
+  type TaskContext,
+  compareVersions,
+  fs,
+  log,
+  verify as v,
+} from "../../../src/lib/mod.ts";
+import { checkCommandOutput, curl, runOrFail } from "../../../src/lib/shell.ts";
 import { join } from "@std/path";
 
 const AGE_VERSION = "1.3.1";
-const SOPS_VERSION = "3.12.2";
+const SOPS_VERSION = "3.13.1";
 
+/**
+ * Check if sops needs to be installed or upgraded. Gated on the sops version
+ * (the one that moves); age is rarely updated and travels with this task.
+ * Returns true if task should run, false if the installed version is current.
+ */
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const sopsBin = `${ctx.home}/.local/bin/sops`;
   try {
     await Deno.stat(sopsBin);
-    return false;
   } catch {
-    return true;
+    return true; // sops not installed
   }
+
+  const result = await checkCommandOutput([sopsBin, "--version"]);
+  if (result.code !== 0) return true;
+
+  // Parse version: "sops 3.13.1 (latest)"
+  const match = result.stdout?.match(/(\d+\.\d+\.\d+)/);
+  const installedVersion = match?.[1];
+  if (!installedVersion) return true; // couldn't parse, run to be safe
+
+  if (compareVersions(installedVersion, SOPS_VERSION) >= 0) {
+    return false; // installed version is equal or newer
+  }
+
+  log.info(`sops ${installedVersion} installed, upgrading to ${SOPS_VERSION}`);
+  return true;
 }
 
 export async function run(ctx: TaskContext): Promise<void> {
