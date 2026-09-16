@@ -28,8 +28,13 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 
 compinit -u
 _comp_options+=(globdots) # include hidden files
 
-# Enable searching through history
+# Enable searching through history (fallback when fzf is absent)
 bindkey '^R' history-incremental-pattern-search-backward
+
+# fzf shell integration (Ctrl-R history, Ctrl-T files, Alt-C directories).
+# apt's fzf ships these under /usr/share/doc; it never creates ~/.fzf.zsh.
+[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+[ -f /usr/share/doc/fzf/examples/completion.zsh ] && source /usr/share/doc/fzf/examples/completion.zsh
 
 # Load aliases and shortcuts if exists
 [ -f "$HOME/.zsh/aliasrc" ] && source "$HOME/.zsh/aliasrc"
