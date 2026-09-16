@@ -31,12 +31,6 @@ _comp_options+=(globdots) # include hidden files
 # Enable searching through history
 bindkey '^R' history-incremental-pattern-search-backward
 
-# Ctrl+F to launch tmux-sessionizer
-bindkey -s ^f "tmux-sessionizer\n"
-
-# fzf fuzzy finder
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
 # Load aliases and shortcuts if exists
 [ -f "$HOME/.zsh/aliasrc" ] && source "$HOME/.zsh/aliasrc"
 
@@ -51,9 +45,6 @@ bindkey -s ^f "tmux-sessionizer\n"
 # Cargo (unconditional PATH for testing, source env if exists for extras)
 export PATH="$HOME/.cargo/bin:$PATH"
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
-
-# Fasd
-command -v fasd &>/dev/null && eval "$(fasd --init posix-alias zsh-hook)"
 
 # Use lf to switch directories and bind it to ctrl-o
 lfcd () {
@@ -85,18 +76,12 @@ export PATH=/usr/local/cuda/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
 # Go
-export PATH=/usr/local/go/bin:$PATH
-
-# Golang environment variables
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
-export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH:
+export PATH="$GOPATH/bin:$GOROOT/bin:$PATH"
 
 # Set standard config dir
 export XDG_CONFIG_HOME="$HOME/.config"
-
-# DuckDB
-export PATH="$HOME/.duckdb/cli/latest:$PATH"
 
 # pnpm
 export PNPM_HOME="$HOME/.local/share/pnpm"
@@ -104,13 +89,6 @@ case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-
-# Ollama
-OLLAMA_HOST=0.0.0.0
-
-# Turso
-[ -f "$HOME/.turso/env" ] && . "$HOME/.turso/env"
-export PATH="$HOME/.turso:$PATH"
 
 # Load API keys from dotenvx (encrypted in ~/git/larr-dev-env/.env)
 if command -v dotenvx &> /dev/null && [ -f "$HOME/git/larr-dev-env/.env" ]; then
