@@ -129,6 +129,9 @@ export PATH="$HOME/.resend/bin:$PATH"
 export PATH="$HOME/.local/bin:$HOME/.local/scripts:$PATH"
 export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
 
+# zoxide (smarter cd: `z dir`, `zi` for interactive). After ~/.local/bin is on PATH.
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
+
 # SDKMAN (Java/Maven/Gradle). Installed by the sdkman task with rcupdate=false,
 # so this is the only place the hook lives. SDKMAN wants it last in the file.
 export SDKMAN_DIR="$HOME/.sdkman"

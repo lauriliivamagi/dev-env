@@ -385,9 +385,13 @@ async function findCargo(home: string): Promise<string | null> {
 export async function cargoInstall(
   ctx: TaskContext,
   pkg: string,
-  opts: { features?: string[] } = {},
+  opts: { features?: string[]; version?: string } = {},
 ): Promise<void> {
   assert(pkg.length > 0, "cargo package name cannot be empty");
+  assert(
+    opts.version === undefined || /^\d+\.\d+\.\d+$/.test(opts.version),
+    "cargo version must be a plain semver like 1.2.3",
+  );
 
   // In dry-run mode, assume cargo is available
   const cargo = ctx.dryRun ? "cargo" : await findCargo(ctx.home);
@@ -400,6 +404,7 @@ export async function cargoInstall(
     cargo,
     "install",
     pkg,
+    ...(opts.version ? ["--version", opts.version] : []),
     ...(opts.features?.length ? ["--features", opts.features.join(",")] : []),
   ];
   await runOrFail(ctx, cmd);

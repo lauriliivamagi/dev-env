@@ -166,7 +166,7 @@ Install a Rust package via cargo. Gracefully handles missing cargo installation.
 async function cargoInstall(
   ctx: TaskContext,
   pkg: string,
-  opts?: { features?: string[] },
+  opts?: { features?: string[]; version?: string },
 ): Promise<void>
 ```
 
@@ -183,6 +183,9 @@ await cargoInstall(ctx, "ripgrep");
 
 await cargoInstall(ctx, "bat", { features: ["git", "regex"] });
 // Runs: cargo install bat --features git,regex
+
+await cargoInstall(ctx, "kdotool", { version: "0.3.0" });
+// Runs: cargo install kdotool --version 0.3.0
 ```
 
 **Note:** This allows tasks to optionally install cargo packages without failing if Rust isn't installed.

@@ -117,6 +117,15 @@ Deno.test("cargoInstall - throws on empty package name", async () => {
   );
 });
 
+Deno.test("cargoInstall - throws on malformed version", async () => {
+  const ctx = createMockContext();
+  await assertRejects(
+    () => cargoInstall(ctx, "kdotool", { version: "v0.3.0" }),
+    Error,
+    "plain semver",
+  );
+});
+
 Deno.test("goInstall - throws on empty package name", async () => {
   const ctx = createMockContext();
   await assertRejects(
