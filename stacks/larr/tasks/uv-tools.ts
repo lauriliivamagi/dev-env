@@ -13,16 +13,21 @@ import { join } from "@std/path";
 // Each tool gets its own venv under ~/.local/share/uv/tools and its entry
 // points linked into ~/.local/bin.
 //
-// Tools are forced onto uv-managed Python builds (--python-preference
-// only-managed) rather than whatever `python3` is on PATH. pipx venvs were
-// bound to a pyenv or apt interpreter, so a pyenv version bump or an Ubuntu
-// release upgrade left them with a dead interpreter; uv-managed builds live
-// under ~/.local/share/uv/python and are touched by neither.
+// Tools are forced onto a pinned uv-managed Python build (--python +
+// --python-preference only-managed) rather than whatever `python3` is on
+// PATH. pipx venvs were bound to a pyenv or apt interpreter, so a pyenv
+// version bump or an Ubuntu release upgrade left them with a dead
+// interpreter; uv-managed builds live under ~/.local/share/uv/python and are
+// touched by neither. uv downloads the pinned build on first use.
 //
-// Pinned like go-tools/volta lists: bump a version here to upgrade existing
-// machines. A tool with `from` instead of `version` is installed from that
-// source (git) and only checked for presence.
+// Pinned like go-tools/volta lists: bump a tool version or PYTHON_VERSION
+// here to upgrade existing machines. A tool with `from` instead of `version`
+// is installed from that source (git) and only checked for presence (its
+// interpreter is still checked).
 export const dependsOn = ["uv"];
+
+/** Interpreter every tool venv is built on; bump to move all tools at once. */
+const PYTHON_VERSION = "3.14.7";
 
 interface UvTool {
   /** PyPI / uv tool name (as shown by `uv tool list`) */
@@ -45,31 +50,46 @@ function uvBin(ctx: TaskContext): string {
   return join(ctx.home, ".local", "bin", "uv");
 }
 
+interface Installed {
+  version: string;
+  python: string;
+}
+
 /**
- * Installed tool versions per `uv tool list`, whose entries look like
- * "csvkit v2.2.0" followed by indented "- csvcut" lines.
+ * Installed tools per `uv tool list --show-python`, whose entries look like
+ * "csvkit v2.2.0 [CPython 3.14.7]" followed by indented "- csvcut" lines.
  */
-async function installedTools(ctx: TaskContext): Promise<Map<string, string>> {
-  const result = await checkCommandOutput([uvBin(ctx), "tool", "list"]);
-  const installed = new Map<string, string>();
+async function installedTools(ctx: TaskContext): Promise<Map<string, Installed>> {
+  const result = await checkCommandOutput([uvBin(ctx), "tool", "list", "--show-python"]);
+  const installed = new Map<string, Installed>();
   if (result.code !== 0) return installed;
-  for (const m of (result.stdout ?? "").matchAll(/^(\S+) v(\S+)/gm)) {
-    installed.set(m[1]!, m[2]!);
+  for (
+    const m of (result.stdout ?? "").matchAll(/^(\S+) v(\S+) \[CPython (\d+\.\d+\.\d+)\]/gm)
+  ) {
+    installed.set(m[1]!, { version: m[2]!, python: m[3]! });
   }
   return installed;
 }
 
-/** Whether a tool is missing, or (when pinned) older than the pin. */
-function needsInstall(tool: UvTool, installed: Map<string, string>): boolean {
+/**
+ * Why a tool needs (re)installing, or null if it is current: missing, tool
+ * version older than the pin, or venv on an older interpreter than pinned.
+ */
+function installReason(tool: UvTool, installed: Map<string, Installed>): string | null {
   const have = installed.get(tool.name);
-  if (!have) return true;
-  if (!tool.version) return false; // unpinned: presence is enough
-  return compareVersions(have, tool.version) < 0;
+  if (!have) return "not installed";
+  if (tool.version && compareVersions(have.version, tool.version) < 0) {
+    return `${have.version} -> ${tool.version}`;
+  }
+  if (compareVersions(have.python, PYTHON_VERSION) < 0) {
+    return `Python ${have.python} -> ${PYTHON_VERSION}`;
+  }
+  return null;
 }
 
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   const installed = await installedTools(ctx);
-  return TOOLS.some((tool) => needsInstall(tool, installed));
+  return TOOLS.some((tool) => installReason(tool, installed) !== null);
 }
 
 export async function run(ctx: TaskContext): Promise<void> {
@@ -80,7 +100,8 @@ export async function run(ctx: TaskContext): Promise<void> {
       (tool.version === undefined) !== (tool.from === undefined),
       `${tool.name}: exactly one of version/from must be set`,
     );
-    if (!needsInstall(tool, installed)) continue;
+    const reason = installReason(tool, installed);
+    if (reason === null) continue;
 
     // Migrate from a pipx-managed install if present. Both link entry points
     // into ~/.local/bin and uv refuses to overwrite executables it doesn't
@@ -102,19 +123,19 @@ export async function run(ctx: TaskContext): Promise<void> {
       }
     }
 
-    const have = installed.get(tool.name);
     const spec = tool.version ? `${tool.name}==${tool.version}` : `${tool.name} @ ${tool.from}`;
-    log.info(
-      have
-        ? `Upgrading ${tool.name} ${have} -> ${tool.version ?? tool.from}`
-        : `Installing ${tool.name} ${tool.version ?? `from ${tool.from}`}`,
-    );
+    log.info(`Installing ${tool.name} (${reason})`);
+    // --reinstall: an existing venv is rebuilt even when only the interpreter
+    // changed, which uv would otherwise report as already installed.
     await runOrFail(ctx, [
       uvBin(ctx),
       "tool",
       "install",
+      "--python",
+      PYTHON_VERSION,
       "--python-preference",
       "only-managed",
+      ...(installed.has(tool.name) ? ["--reinstall"] : []),
       ...(takeOver ? ["--force"] : []),
       spec,
     ]);
@@ -126,7 +147,12 @@ export async function run(ctx: TaskContext): Promise<void> {
 export async function verify(ctx: TaskContext): Promise<void> {
   const installed = await installedTools(ctx);
   for (const tool of TOOLS) {
-    assert(installed.has(tool.name), `${tool.name} is not listed by uv tool list`);
+    const have = installed.get(tool.name);
+    assert(have !== undefined, `${tool.name} is not listed by uv tool list`);
+    assert(
+      compareVersions(have.python, PYTHON_VERSION) >= 0,
+      `${tool.name} runs on Python ${have.python}, expected >= ${PYTHON_VERSION}`,
+    );
     await v.assertFile(join(ctx.home, ".local", "bin", tool.bin));
   }
 }
