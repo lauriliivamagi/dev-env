@@ -131,9 +131,6 @@ command -v pyenv &>/dev/null && eval "$(pyenv init -)"
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
 
-# Infisical (self-hosted default; per-project .infisical.json / --domain overrides)
-export INFISICAL_API_URL="http://localhost:8654/"
-
 # Edge.js
 export EDGEJS_HOME="$HOME/.edgejs"
 export PATH="$EDGEJS_HOME/bin:$PATH"
