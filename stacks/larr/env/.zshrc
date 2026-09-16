@@ -148,3 +148,8 @@ export PATH="$HOME/.resend/bin:$PATH"
 # Local bin and scripts
 export PATH="$HOME/.local/bin:$HOME/.local/scripts:$PATH"
 export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
+
+# SDKMAN (Java/Maven/Gradle). Installed by the sdkman task with rcupdate=false,
+# so this is the only place the hook lives. SDKMAN wants it last in the file.
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
