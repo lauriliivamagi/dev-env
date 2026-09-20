@@ -58,6 +58,7 @@ stacks/larr/env/
 | `stacks/<stack>/env/.config/*` | `~/.config/` (or `$XDG_CONFIG_HOME`) |
 | `stacks/<stack>/env/.local/*` | `~/.local/` |
 | `stacks/<stack>/env/.zshrc` | `~/.zshrc` |
+| `stacks/<stack>/env/.zshenv` | `~/.zshenv` |
 | `stacks/<stack>/env/.zsh_profile` | `~/.zsh_profile` |
 | `stacks/<stack>/env/.xprofile` | `~/.xprofile` |
 | `stacks/<stack>/env/.tmux-sessionizer` | `~/.tmux-sessionizer` |
@@ -172,6 +173,20 @@ source ~/.zsh_profile
 ```
 
 Note: The `zsh-autosuggestions` and `zsh-syntax-highlighting` plugins are installed by the `zsh` task to `~/.oh-my-zsh/custom/plugins/`.
+
+### .zshenv (larr stack)
+
+Zsh environment file. Unlike `.zshrc` (interactive shells only), `.zshenv` is
+sourced by **every** zsh invocation, including non-interactive shells. Helpers
+that must be callable from tool shells and agents (e.g. Claude Code's `!`
+commands) belong here, not in `.zshrc`.
+
+**Functions:**
+- `open_book_page <path|filename|entry-id> [page]` — Opens a Library PDF at a
+  page. Accepts a filesystem path, a bare PDF filename, or a Catalog Entry id;
+  resolves the entry's PDF File via `~/git/books/catalog/index.json` and opens
+  it with `xdg-open`. The `page` argument is the PDF page index (what docling
+  cites), not the printed folio.
 
 ### .p10k.zsh (larr stack)
 
