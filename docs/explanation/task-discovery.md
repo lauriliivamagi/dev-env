@@ -143,6 +143,7 @@ This provides deterministic execution while respecting dependency constraints.
 | `dotenvx` | Environment variable encryption |
 | `espanso` | Text expansion |
 | `fd` | Fast find alternative |
+| `fontconfig-guard` | Sweeps Chrome's version symlinks out of the user font cache |
 | `fonts` | Font installation |
 | `fzf` | Fuzzy finder |
 | `gh` | GitHub CLI |
