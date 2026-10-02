@@ -136,6 +136,7 @@ This provides deterministic execution while respecting dependency constraints.
 | `bat` | Better cat with syntax highlighting |
 | `chtsh` | cht.sh CLI cheat sheets |
 | `claude` | Claude AI integration |
+| `code-insiders-apparmor` | AppArmor profile that lets VS Code Insiders sandbox itself (depends on vscode) |
 | `delta` | Git diff viewer |
 | `deno` | Deno runtime (depends on volta) |
 | `dev` | Development tools (build-essential, etc.) |
