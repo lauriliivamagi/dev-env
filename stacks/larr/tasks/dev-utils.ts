@@ -9,6 +9,7 @@ export async function run(ctx: TaskContext): Promise<void> {
     "wget",
     "gnupg",
     "unzip",
+    "zip",
     "htop",
     "mc",
     "atop",
@@ -35,6 +36,7 @@ export async function verify(_ctx: TaskContext): Promise<void> {
   await v.assertCommand("wget", "--version");
   await v.assertCommand("gpg", "--version");
   await v.assertCommand("unzip", "-v");
+  await v.assertCommand("zip", "-v");
   await v.assertCommand("htop", "--version");
   // mc --version returns exit code 1 in non-interactive environments
   await v.assertFile("/usr/bin/mc");

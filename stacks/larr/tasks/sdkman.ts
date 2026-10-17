@@ -10,7 +10,7 @@ import { curlPipe, runOrFail } from "../../../src/lib/shell.ts";
 //
 // Versions are pinned like pyenv.ts pins Python. Java tracks the current LTS
 // (Temurin builds, the vendor-neutral default SDKMAN itself picks).
-export const dependsOn = ["dev-utils"]; // curl, unzip (zip comes with Ubuntu)
+export const dependsOn = ["dev-utils"]; // curl, unzip, zip (installer refuses to run without zip)
 
 const JAVA_VERSION = "25.0.4-tem"; // Temurin 25 = latest LTS
 const MAVEN_VERSION = "3.9.16";
