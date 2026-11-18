@@ -29,7 +29,7 @@ export async function run(ctx: TaskContext): Promise<void> {
   const env: Record<string, string> = {
     PNPM_HOME: pnpmHome,
     SHELL: "/bin/bash",
-    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}:${currentPath}`,
+    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}/bin:${pnpmHome}:${currentPath}`,
   };
   await runOrFail(ctx, [`${ctx.home}/.volta/bin/pnpm`, "setup"], { env });
 

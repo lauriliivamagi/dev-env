@@ -360,7 +360,7 @@ export async function pnpm(ctx: TaskContext, args: string[]): Promise<void> {
   const currentPath = Deno.env.get("PATH") ?? "";
   const env: Record<string, string> = {
     PNPM_HOME: pnpmHome,
-    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}:${currentPath}`,
+    PATH: Deno.env.get("REALISTIC_TEST") ? currentPath : `${pnpmHome}/bin:${pnpmHome}:${currentPath}`,
   };
   await runOrFail(ctx, [pnpmCmd, ...args], { env });
 }

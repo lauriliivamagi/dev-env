@@ -11,7 +11,7 @@ export async function verify(ctx: TaskContext): Promise<void> {
   await v.assertCommandWithPath(
     ctx.home,
     "tldr",
-    `${ctx.home}/.local/share/pnpm/tldr`,
+    `${ctx.home}/.local/share/pnpm/bin/tldr`,
     "--version",
   );
 }

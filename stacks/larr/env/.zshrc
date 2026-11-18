@@ -91,8 +91,8 @@ export XDG_CONFIG_HOME="$HOME/.config"
 # pnpm
 export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH" ;;
 esac
 
 # Load API keys from dotenvx (encrypted in ~/git/larr-dev-env/.env)
