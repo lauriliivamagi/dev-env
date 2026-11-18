@@ -61,7 +61,7 @@ export async function run(ctx: TaskContext): Promise<void> {
   await runOrFail(ctx, [
     "bash",
     "-c",
-    "curl -sS https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | sudo gpg --dearmor -o /usr/share/keyrings/spotify.gpg",
+    "curl -sS https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc | sudo gpg --dearmor -o /usr/share/keyrings/spotify.gpg",
   ]);
   await runOrFail(ctx, [
     "bash",
