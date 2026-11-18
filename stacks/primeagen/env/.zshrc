@@ -110,7 +110,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 # pnpm
 export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH"
 # pnpm end
 # Turso
 export PATH="$HOME/.turso:$PATH"

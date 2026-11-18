@@ -7,7 +7,7 @@ export const dependsOn = ["node"];
  * Check if dev tools need to be installed.
  */
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
-  const tldrBin = `${ctx.home}/.local/share/pnpm/tldr`;
+  const tldrBin = `${ctx.home}/.local/share/pnpm/bin/tldr`;
   try {
     await Deno.stat(tldrBin);
     return false;
@@ -41,7 +41,7 @@ export async function verify(ctx: TaskContext): Promise<void> {
   await v.assertCommandWithPath(
     ctx.home,
     "tldr",
-    `${ctx.home}/.local/share/pnpm/tldr`,
+    `${ctx.home}/.local/share/pnpm/bin/tldr`,
     "--version",
   );
 }
