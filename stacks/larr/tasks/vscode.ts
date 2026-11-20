@@ -80,6 +80,35 @@ async function overridesCurrent(ctx: TaskContext): Promise<boolean> {
   return true;
 }
 
+// The apt source that already serves VS Code, if any. This task writes
+// vscode.list; the deb's postinst writes vscode.sources (deb822) when it finds
+// no source. Matching on the URL covers both, so neither gets a duplicate.
+const REPO_URL = "packages.microsoft.com/repos/code";
+const APT_SOURCES_DIR = "/etc/apt/sources.list.d";
+
+export async function vscodeRepoFile(): Promise<string | null> {
+  const candidates = ["/etc/apt/sources.list"];
+  try {
+    for await (const entry of Deno.readDir(APT_SOURCES_DIR)) {
+      if (entry.isFile && /\.(list|sources)$/.test(entry.name)) {
+        candidates.push(join(APT_SOURCES_DIR, entry.name));
+      }
+    }
+  } catch {
+    return null; // No apt (not Debian/Ubuntu)
+  }
+  for (const path of candidates.sort()) {
+    try {
+      const enabled = (await Deno.readTextFile(path)).split("\n")
+        .filter((line) => !line.trimStart().startsWith("#"));
+      if (enabled.some((line) => line.includes(REPO_URL))) return path;
+    } catch {
+      // Missing /etc/apt/sources.list or unreadable file
+    }
+  }
+  return null;
+}
+
 export async function shouldRun(ctx: TaskContext): Promise<boolean> {
   try {
     const result = await checkCommandOutput(["code-insiders", "--version"]);
@@ -96,17 +125,10 @@ export async function run(ctx: TaskContext): Promise<void> {
   // Install dependencies (wget and gnupg needed for GPG key setup)
   await apt(ctx, ["apt-transport-https", "wget", "gnupg"]);
 
-  // Check if VS Code repo already exists (deb822 format from previous install)
-  let repoExists = false;
-  try {
-    await Deno.stat("/etc/apt/sources.list.d/vscode.sources");
-    repoExists = true;
-    log.info("VS Code repository already configured");
-  } catch {
-    // No existing repo, need to add it
-  }
-
-  if (!repoExists) {
+  const repoFile = await vscodeRepoFile();
+  if (repoFile) {
+    log.info(`VS Code repository already configured in ${repoFile}`);
+  } else {
     // Add Microsoft GPG key (use microsoft.gpg to match existing MS repos)
     log.info("Adding Microsoft GPG key");
     await runOrFail(ctx, [
