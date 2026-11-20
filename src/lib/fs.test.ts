@@ -446,6 +446,36 @@ Deno.test("syncConfigDir - syncs all subdirectories", async () => {
   }
 });
 
+Deno.test("syncConfigDir - syncs top-level files", async () => {
+  const tmpDir = await Deno.makeTempDir();
+  try {
+    const ctx = createMockContext({ dryRun: false });
+    const srcBase = join(tmpDir, "src");
+    const destBase = join(tmpDir, "dest");
+
+    await Deno.mkdir(srcBase, { recursive: true });
+    await Deno.writeTextFile(
+      join(srcBase, "xdg-terminals.list"),
+      "com.mitchellh.ghostty.desktop\n",
+    );
+    await Deno.mkdir(destBase);
+    await Deno.writeTextFile(join(destBase, "other.list"), "keep me");
+
+    const first = await syncConfigDir(ctx, srcBase, destBase);
+    assertEquals(first.changed, true);
+    assertEquals(
+      await Deno.readTextFile(join(destBase, "xdg-terminals.list")),
+      "com.mitchellh.ghostty.desktop\n",
+    );
+    assertEquals(await Deno.readTextFile(join(destBase, "other.list")), "keep me");
+
+    const second = await syncConfigDir(ctx, srcBase, destBase);
+    assertEquals(second.changed, false);
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true });
+  }
+});
+
 // ============================================================================
 // Path traversal protection tests (prefix checking)
 // ============================================================================

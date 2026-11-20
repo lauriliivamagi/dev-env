@@ -281,14 +281,20 @@ export async function syncConfigDir(
 
   let changed = false;
   for await (const entry of Deno.readDir(srcBase)) {
-    if (entry.isDirectory) {
-      const src = join(srcBase, entry.name);
-      const dest = join(destBase, entry.name);
+    const src = join(srcBase, entry.name);
+    const dest = join(destBase, entry.name);
 
+    if (entry.isDirectory) {
       // Merge instead of replace - preserves existing files in dest
       await mergeDir(src, dest);
       log.success(`Synced ${entry.name}`);
       changed = true;
+    } else if (entry.isFile) {
+      // Top-level files (e.g. ~/.config/xdg-terminals.list) that tools only
+      // look for directly in the base dir, not in a subdirectory.
+      const result = await copyFile(ctx, src, dest);
+      if (result.changed) log.success(`Synced ${entry.name}`);
+      changed = changed || result.changed;
     }
   }
 
