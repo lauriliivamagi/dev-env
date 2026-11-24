@@ -23,25 +23,24 @@ export async function run_(ctx: TaskContext): Promise<void> {
       "set",
       "org.gnome.desktop.input-sources",
       "sources",
-      "[('xkb', 'us'), ('xkb', 'ee')]",
+      "[('xkb', 'ee')]",
     ]);
   } else {
     // Fallback: use setxkbmap for X11
     log.info("Configuring keyboard via setxkbmap");
-    const result = await run(ctx, ["setxkbmap", "-layout", "us,ee", "-option", "grp:alt_shift_toggle"], {
+    const result = await run(ctx, ["setxkbmap", "-layout", "ee"], {
       stdout: "null",
       stderr: "piped",
     });
 
     if (result.code !== 0) {
       log.warn("setxkbmap failed - you may need to configure keyboard manually");
-      log.info("Run: setxkbmap -layout us,ee -option grp:alt_shift_toggle");
+      log.info("Run: setxkbmap -layout ee");
       return;
     }
   }
 
   log.success("Estonian keyboard layout configured");
-  log.info("Use Alt+Shift to toggle between US and Estonian layouts");
 }
 
 // Export with correct name
